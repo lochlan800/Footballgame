@@ -339,6 +339,16 @@
                 <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
             </div>
 
+            <!-- Squad Selection Screen -->
+            <div id="squadSelectionScreen" class="screen">
+                <h2 id="squadSelectionTitle">Select Your Squad</h2>
+                <div id="squadSelectionContent"></div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="menu-btn" style="flex: 1;" id="confirmSquadBtn" onclick="confirmSquadSelection()">⚽ KICK OFF!</button>
+                    <button class="back-btn" onclick="goBackToMatchPreview()">Back</button>
+                </div>
+            </div>
+
             <!-- Match Result Screen -->
             <div id="matchResultScreen" class="screen">
                 <div id="resultContent"></div>
@@ -859,11 +869,110 @@
                     </div>
                 </div>
 
-                <button class="menu-btn" style="width: 100%; margin-bottom: 10px;" onclick="playMatch('${randomOpponent}')">⚽ KICK OFF!</button>
+                <button class="menu-btn" style="width: 100%; margin-bottom: 10px;" onclick="gameState.currentOpponent = '${randomOpponent}'; showSquadSelectionScreen()">⚽ KICK OFF!</button>
                 <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
             `;
 
             document.getElementById('playMatchScreen').innerHTML = content;
+            showScreen('playMatchScreen');
+        }
+
+        function showSquadSelectionScreen() {
+            const opponent = gameState.currentOpponent;
+            document.getElementById('squadSelectionTitle').textContent = `Select Your Squad vs ${opponent}`;
+
+            const selectedPlayers = gameState.selectedPlayers || {};
+            let html = '<div style="margin-bottom: 20px;">';
+            html += `<p style="margin-bottom: 15px; color: #666;">Select the players you want to play in this match. You must select at least 5 players.</p>`;
+
+            const positions = ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
+            const playersByPosition = {};
+            positions.forEach(pos => {
+                playersByPosition[pos] = gameState.squad.filter(p => p.position === pos);
+            });
+
+            positions.forEach(position => {
+                const players = playersByPosition[position];
+                if (players.length > 0) {
+                    html += `<div style="margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 10px;">${position}s</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">`;
+
+                    players.forEach(player => {
+                        const isSelected = selectedPlayers[player.name];
+                        html += `
+                            <div style="background: ${isSelected ? '#e3f2fd' : '#f9f9f9'}; border: 2px solid ${isSelected ? '#667eea' : '#ddd'}; padding: 12px; border-radius: 6px; cursor: pointer; transition: all 0.3s;" onclick="togglePlayerSelection('${player.name}')">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                    <div style="font-weight: bold; color: #333;">${player.name}</div>
+                                    <input type="checkbox" ${isSelected ? 'checked' : ''} style="cursor: pointer;" onclick="event.stopPropagation()">
+                                </div>
+                                <div style="font-size: 0.85em; color: #667eea;">⭐ ${player.strength}/100</div>
+                                <div style="font-size: 0.75em; color: #999;">£${player.wage}M/week</div>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div></div>`;
+                }
+            });
+
+            html += `<div style="margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 6px;">
+                <div style="font-size: 0.9em; color: #666;">
+                    <span id="selectedCount">0</span> / ${gameState.squad.length} players selected
+                </div>
+            </div>`;
+
+            document.getElementById('squadSelectionContent').innerHTML = html;
+            updateSelectedCount();
+            showScreen('squadSelectionScreen');
+        }
+
+        function togglePlayerSelection(playerName) {
+            if (!gameState.selectedPlayers) {
+                gameState.selectedPlayers = {};
+            }
+            gameState.selectedPlayers[playerName] = !gameState.selectedPlayers[playerName];
+            updateSelectedCount();
+            showSquadSelectionScreen();
+        }
+
+        function updateSelectedCount() {
+            const selectedPlayers = gameState.selectedPlayers || {};
+            const count = Object.values(selectedPlayers).filter(v => v).length;
+            const countElement = document.getElementById('selectedCount');
+            if (countElement) {
+                countElement.textContent = count;
+            }
+            const confirmBtn = document.getElementById('confirmSquadBtn');
+            if (confirmBtn) {
+                confirmBtn.disabled = count < 5;
+                confirmBtn.style.opacity = count < 5 ? '0.5' : '1';
+                confirmBtn.style.cursor = count < 5 ? 'not-allowed' : 'pointer';
+            }
+        }
+
+        function confirmSquadSelection() {
+            const selectedPlayers = gameState.selectedPlayers || {};
+            const selectedCount = Object.values(selectedPlayers).filter(v => v).length;
+
+            if (selectedCount < 5) {
+                alert('You must select at least 5 players to play!');
+                return;
+            }
+
+            // Calculate strength based on selected players
+            const selectedPlayerList = Object.keys(selectedPlayers)
+                .filter(name => selectedPlayers[name])
+                .map(name => gameState.squad.find(p => p.name === name));
+
+            const selectedStrength = selectedPlayerList.reduce((sum, p) => sum + p.strength, 0) / selectedPlayerList.length;
+            gameState.matchLineup = selectedPlayerList;
+            gameState.playingStrength = selectedStrength;
+
+            playMatch(gameState.currentOpponent);
+        }
+
+        function goBackToMatchPreview() {
             showScreen('playMatchScreen');
         }
 
@@ -874,7 +983,7 @@
                 return;
             }
 
-            const playerStrength = gameState.teams[gameState.playerTeam].strength;
+            const playerStrength = gameState.playingStrength || gameState.teams[gameState.playerTeam].strength;
             const opponentStrength = gameState.teams[opponent].strength;
 
             const playerScore = Math.floor(Math.random() * 4) + Math.floor(playerStrength / 30);
@@ -943,6 +1052,18 @@
             // Check if season is over
             const seasonOverMsg = gameState.week >= 38 ? '<div style="color: #ff9800; font-weight: bold; margin-top: 15px; font-size: 1.1em;">🏁 SEASON COMPLETE! Go to main menu for final results.</div>' : '';
 
+            // Build lineup display
+            let lineupDisplay = '';
+            if (gameState.matchLineup && gameState.matchLineup.length > 0) {
+                const playerNames = gameState.matchLineup.map(p => p.name).join(', ');
+                lineupDisplay = `
+                    <div style="margin-bottom: 15px; padding: 12px; background: #f0f7ff; border-left: 4px solid #667eea; border-radius: 4px;">
+                        <div style="font-weight: bold; color: #667eea; margin-bottom: 5px;">📋 Your Lineup (${gameState.matchLineup.length} players):</div>
+                        <div style="font-size: 0.9em; color: #333;">${playerNames}</div>
+                    </div>
+                `;
+            }
+
             const content = document.getElementById('resultContent');
             content.innerHTML = `
                 <div class="match-result ${resultClass}">
@@ -950,6 +1071,7 @@
                     <h2>Week ${gameState.week}/38 ${matchTypeDisplay}</h2>
                     <h2>${gameState.playerTeam} ${playerScore} - ${opponentScore} ${opponent}</h2>
                     <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px;">
+                        ${lineupDisplay}
                         ${attendanceInfo}
                         <div style="margin-top: 10px;">
                             <div style="margin-bottom: 10px; color: #f44336; font-weight: bold;">-£${weeklyWages.toFixed(2)}M weekly wages</div>
