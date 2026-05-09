@@ -773,18 +773,40 @@
             const isHome = gameState.schedule[gameState.week];
             const matchType = isHome ? '🏠 HOME' : '✈️ AWAY';
 
-            const grid = document.getElementById('opponentGrid');
-            grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; margin-bottom: 20px; font-size: 1.3em; font-weight: bold; color: ${isHome ? '#4caf50' : '#f44336'};">Week ${gameState.week + 1}/38 - ${matchType}</div>`;
+            // Get all other teams and pick a random opponent
+            const allTeams = Object.keys(TEAMS).filter(t => t !== gameState.playerTeam);
+            const randomOpponent = allTeams[Math.floor(Math.random() * allTeams.length)];
 
-            for (let team in TEAMS) {
-                if (team !== gameState.playerTeam) {
-                    const btn = document.createElement('button');
-                    btn.className = 'opponent-btn';
-                    btn.textContent = team;
-                    btn.onclick = () => playMatch(team);
-                    grid.appendChild(btn);
-                }
-            }
+            // Show match preview before playing
+            const content = `
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h2 style="color: #667eea; margin-bottom: 10px;">Week ${gameState.week + 1}/38</h2>
+                    <div style="background: linear-gradient(135deg, ${isHome ? '#4caf50' : '#f44336'} 0%, ${isHome ? '#45a049' : '#e53935'} 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <div style="font-size: 1.2em; margin-bottom: 10px;">${matchType}</div>
+                        <h1 style="margin: 0; font-size: 2em;">${gameState.playerTeam}</h1>
+                        <div style="font-size: 1.5em; margin: 15px 0;">vs</div>
+                        <h1 style="margin: 0; font-size: 2em;">${randomOpponent}</h1>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 0.9em; color: #666; margin-bottom: 10px;">Your Team</div>
+                        <div style="font-weight: bold; font-size: 1.2em; color: #667eea;">${gameState.teams[gameState.playerTeam].strength}/100</div>
+                        <div style="font-size: 0.8em; color: #999;">Squad: ${gameState.squad.length}</div>
+                    </div>
+                    <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 0.9em; color: #666; margin-bottom: 10px;">Opponent</div>
+                        <div style="font-weight: bold; font-size: 1.2em; color: #667eea;">${gameState.teams[randomOpponent].strength}/100</div>
+                        <div style="font-size: 0.8em; color: #999;">${randomOpponent}</div>
+                    </div>
+                </div>
+
+                <button class="menu-btn" style="width: 100%; margin-bottom: 10px;" onclick="playMatch('${randomOpponent}')">⚽ KICK OFF!</button>
+                <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
+            `;
+
+            document.getElementById('opponentGrid').parentElement.innerHTML = content;
             showScreen('playMatchScreen');
         }
 
