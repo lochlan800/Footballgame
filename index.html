@@ -1159,6 +1159,9 @@
                             </text>
                         </g>
                     </svg>
+                    <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 900px; background: rgba(0,0,0,0.7); color: white; padding: 15px 20px; border-radius: 8px; font-size: 18px; font-weight: bold; text-align: center; min-height: 50px; display: flex; align-items: center; justify-content: center;">
+                        <div id="commentaryLog">⚽ Match starting...</div>
+                    </div>
                     <div id="goalDisplay" class="pitch-overlay-label">⚽ Match in progress...</div>
             `;
 
@@ -1357,20 +1360,69 @@
             showScreen('matchResultScreen');
             content.innerHTML = '<div style="text-align:center; padding: 40px; color: #667eea; font-size: 1.2em;">⚽ Match in progress...</div>';
 
-            // Update commentary text during animation
-            let commentTime = 0;
+            // Generate detailed play-by-play commentary
             const updateCommentary = () => {
                 const goalSequence = pitchAnimation.goalSequence;
+                const log = document.getElementById('commentaryLog');
+
+                const commentaryActions = [
+                    'plays the ball forward', 'passes to the wing', 'crosses into the box',
+                    'shoots at goal', 'takes a long-range shot', 'cuts inside and shoots'
+                ];
+                const interceptions = [
+                    'Intercepted! ', 'Loose ball! ', 'Blocked by the defense! ', 'Cleared! '
+                ];
+                const saves = [
+                    'Brilliant save from the goalkeeper!', 'Excellent shot-stopping!',
+                    'Saved with a diving header!', 'Great reflexes from the keeper!'
+                ];
+
+                let timeOffset = 0;
+
                 if (goalSequence && goalSequence.length > 0) {
                     for (let i = 0; i < goalSequence.length; i++) {
-                        const scoreTeam = goalSequence[i] === 'player' ? gameState.playerTeam : opponent;
-                        const timingStart = i * 2.5 + 1; // Start showing text just before goal
-                        const timingEnd = timingStart + 1.2;
+                        const isPlayerGoal = goalSequence[i] === 'player';
+                        const attackingTeam = isPlayerGoal ? gameState.playerTeam : opponent;
+                        const defendingTeam = isPlayerGoal ? opponent : gameState.playerTeam;
 
+                        // Initial possession
                         setTimeout(() => {
+                            if (log) log.textContent = `${attackingTeam} ${commentaryActions[Math.floor(Math.random() * commentaryActions.length)]}`;
+                        }, timeOffset * 1000);
+
+                        timeOffset += 0.6;
+
+                        // Interception/defense
+                        setTimeout(() => {
+                            if (log) log.textContent = `${interceptions[Math.floor(Math.random() * interceptions.length)]}${defendingTeam} ${commentaryActions[Math.floor(Math.random() * commentaryActions.length)]}`;
+                        }, timeOffset * 1000);
+
+                        timeOffset += 0.6;
+
+                        // Shot
+                        setTimeout(() => {
+                            if (log) log.textContent = `${attackingTeam} takes a shot!`;
+                        }, timeOffset * 1000);
+
+                        timeOffset += 0.3;
+
+                        // Save or Goal
+                        setTimeout(() => {
+                            if (log) {
+                                if (Math.random() > 0.3) {
+                                    log.textContent = saves[Math.floor(Math.random() * saves.length)];
+                                } else {
+                                    log.textContent = `⚽ GOAL FOR ${attackingTeam.toUpperCase()}!`;
+                                }
+                            }
+                            // Also update the center text
                             const text = document.getElementById('commentaryText');
-                            if (text) text.textContent = '⚽ GOAL!';
-                        }, timingStart * 1000);
+                            if (text && Math.random() <= 0.5) {
+                                text.textContent = '⚽ GOAL!';
+                            }
+                        }, timeOffset * 1000);
+
+                        timeOffset += 1.0;
                     }
                 }
             };
