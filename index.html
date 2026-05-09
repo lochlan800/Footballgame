@@ -1073,7 +1073,22 @@
         function generatePitchAnimation(playerScore, opponentScore, playerTeam, opponent) {
             const goalSequence = createGoalSequence(playerScore, opponentScore);
             const totalGoals = playerScore + opponentScore;
-            const animationDuration = Math.max(2, totalGoals * 1.5);
+            // 90 minutes × 2 seconds per minute = 180 seconds total
+            const animationDuration = 180;
+            const secondsPerMinute = 2;
+
+            // Distribute goals throughout the match
+            const goalTimes = [];
+            if (totalGoals > 0) {
+                for (let i = 0; i < totalGoals; i++) {
+                    // Goals can happen between 5-85 minutes, spread them out
+                    const minTime = Math.floor((i / totalGoals) * 60) + 5;
+                    const maxTime = Math.floor(((i + 1) / totalGoals) * 60) + 20;
+                    const goalMinute = Math.floor(Math.random() * (maxTime - minTime)) + minTime;
+                    goalTimes.push(goalMinute);
+                }
+                goalTimes.sort((a, b) => a - b);
+            }
 
             let animationHTML = `
                 <div class="pitch-overlay-label">${playerTeam} vs ${opponent}</div>
@@ -1152,6 +1167,12 @@
                         <!-- Ball -->
                         <circle id="animBall" cx="500" cy="300" r="16" fill="white" stroke="#333" stroke-width="2"/>
 
+                        <!-- Match clock -->
+                        <rect x="350" y="20" width="300" height="60" fill="rgba(0,0,0,0.6)" rx="8"/>
+                        <text id="matchClock" x="500" y="60" text-anchor="middle" font-size="36" font-weight="bold" fill="white">
+                            0:00
+                        </text>
+
                         <!-- Commentary text -->
                         <g id="commentaryGroup">
                             <text id="commentaryText" x="500" y="100" text-anchor="middle" font-size="48" font-weight="bold" fill="white" opacity="0" text-shadow="0 2px 4px rgba(0,0,0,0.8)">
@@ -1188,20 +1209,19 @@
                     }
                 `;
             } else {
-                let currentTime = 0;
                 let animationSequence = '';
-                let commentarySequence = '';
 
                 for (let i = 0; i < goalSequence.length; i++) {
                     const isPlayerGoal = goalSequence[i] === 'player';
-                    const teamName = isPlayerGoal ? playerTeam : opponent;
                     const startX = 500;
                     const startY = 300;
                     const endX = isPlayerGoal ? 1020 : -20;
 
                     const keyframeName = `ballMove${i}`;
                     const moveDuration = 1.5;
-                    const commentaryName = `commentary${i}`;
+                    const goalMinute = goalTimes[i];
+                    const goalTimeInSeconds = goalMinute * secondsPerMinute;
+                    const goalStartTime = Math.max(0, goalTimeInSeconds - 0.75);
 
                     // Ball movement keyframes
                     animationCSS += `
@@ -1211,33 +1231,17 @@
                         }
                     `;
 
-                    // Commentary keyframes - show "GOAL!" at the end
-                    const commentaryStart = currentTime + moveDuration - 0.5;
-                    const commentaryEnd = commentaryStart + 1.2;
-                    animationCSS += `
-                        @keyframes ${commentaryName} {
-                            0% { opacity: 0; font-size: 48px; }
-                            5% { opacity: 1; font-size: 72px; }
-                            80% { opacity: 1; font-size: 72px; }
-                            100% { opacity: 0; font-size: 48px; }
-                        }
-                    `;
-
-                    animationSequence += `${keyframeName} ${moveDuration}s linear ${currentTime}s,`;
-                    commentarySequence += `${commentaryName} ${commentaryEnd - commentaryStart}s ease-out ${commentaryStart}s,`;
-
-                    currentTime += moveDuration + 1;
+                    animationSequence += `${keyframeName} ${moveDuration}s linear ${goalStartTime}s,`;
                 }
 
                 animationSequence = animationSequence.slice(0, -1);
-                commentarySequence = commentarySequence.slice(0, -1);
                 animationCSS += `
                     #animBall {
                         animation: ${animationSequence};
                         animation-fill-mode: forwards;
                     }
                     #commentaryText {
-                        animation: ${commentarySequence};
+                        opacity: 0;
                     }
                 `;
             }
@@ -1247,7 +1251,9 @@
             return {
                 html: animationHTML + animationCSS,
                 duration: animationDuration,
-                goalSequence: goalSequence
+                goalSequence: goalSequence,
+                goalTimes: goalTimes,
+                secondsPerMinute: secondsPerMinute
             };
         }
 
@@ -1360,70 +1366,64 @@
             showScreen('matchResultScreen');
             content.innerHTML = '<div style="text-align:center; padding: 40px; color: #667eea; font-size: 1.2em;">⚽ Match in progress...</div>';
 
-            // Generate detailed play-by-play commentary
+            // Update match clock every 0.1 seconds to show 0:00 to 90:00
+            const updateMatchClock = () => {
+                const startTime = Date.now();
+                const clockInterval = setInterval(() => {
+                    const elapsed = (Date.now() - startTime) / 1000;
+                    if (elapsed >= 180) {
+                        clearInterval(clockInterval);
+                        return;
+                    }
+                    const minute = Math.floor(elapsed / 2);
+                    const seconds = Math.floor((elapsed % 2) * 30); // 2 real seconds = 60 match seconds
+                    const clock = document.getElementById('matchClock');
+                    if (clock) {
+                        clock.textContent = `${minute}:${seconds < 10 ? '0' : ''}${seconds}`;
+                    }
+                }, 100);
+            };
+            updateMatchClock();
+
+            // Generate detailed play-by-play commentary spread throughout the match
             const updateCommentary = () => {
                 const goalSequence = pitchAnimation.goalSequence;
                 const log = document.getElementById('commentaryLog');
+                const secondsPerMinute = 2;
 
                 const commentaryActions = [
                     'plays the ball forward', 'passes to the wing', 'crosses into the box',
-                    'shoots at goal', 'takes a long-range shot', 'cuts inside and shoots'
+                    'shoots at goal', 'takes a long-range shot', 'cuts inside and shoots',
+                    'makes a great pass', 'dribbles forward', 'crosses from the right'
                 ];
                 const interceptions = [
-                    'Intercepted! ', 'Loose ball! ', 'Blocked by the defense! ', 'Cleared! '
+                    'Intercepted! ', 'Loose ball! ', 'Blocked by the defense! ', 'Cleared! ', 'Tackles and wins! '
                 ];
                 const saves = [
                     'Brilliant save from the goalkeeper!', 'Excellent shot-stopping!',
-                    'Saved with a diving header!', 'Great reflexes from the keeper!'
+                    'Saved with a diving header!', 'Great reflexes from the keeper!', 'Parried away safely!'
                 ];
 
-                let timeOffset = 0;
+                // Generate periodic match events throughout 90 minutes
+                const eventInterval = setInterval(() => {
+                    if (!log) return;
+                    const elapsed = 0; // This will be updated per interval
+                    log.textContent = `${commentaryActions[Math.floor(Math.random() * commentaryActions.length)]}`;
+                }, 3000);
 
+                // Schedule goals with commentary
                 if (goalSequence && goalSequence.length > 0) {
-                    for (let i = 0; i < goalSequence.length; i++) {
-                        const isPlayerGoal = goalSequence[i] === 'player';
+                    goalSequence.forEach((scorer, i) => {
+                        const goalMinute = pitchAnimation.goalTimes[i];
+                        const goalTimeInMs = goalMinute * secondsPerMinute * 1000;
+                        const isPlayerGoal = scorer === 'player';
                         const attackingTeam = isPlayerGoal ? gameState.playerTeam : opponent;
                         const defendingTeam = isPlayerGoal ? opponent : gameState.playerTeam;
 
-                        // Initial possession
                         setTimeout(() => {
-                            if (log) log.textContent = `${attackingTeam} ${commentaryActions[Math.floor(Math.random() * commentaryActions.length)]}`;
-                        }, timeOffset * 1000);
-
-                        timeOffset += 0.6;
-
-                        // Interception/defense
-                        setTimeout(() => {
-                            if (log) log.textContent = `${interceptions[Math.floor(Math.random() * interceptions.length)]}${defendingTeam} ${commentaryActions[Math.floor(Math.random() * commentaryActions.length)]}`;
-                        }, timeOffset * 1000);
-
-                        timeOffset += 0.6;
-
-                        // Shot
-                        setTimeout(() => {
-                            if (log) log.textContent = `${attackingTeam} takes a shot!`;
-                        }, timeOffset * 1000);
-
-                        timeOffset += 0.3;
-
-                        // Save or Goal
-                        setTimeout(() => {
-                            if (log) {
-                                if (Math.random() > 0.3) {
-                                    log.textContent = saves[Math.floor(Math.random() * saves.length)];
-                                } else {
-                                    log.textContent = `⚽ GOAL FOR ${attackingTeam.toUpperCase()}!`;
-                                }
-                            }
-                            // Also update the center text
-                            const text = document.getElementById('commentaryText');
-                            if (text && Math.random() <= 0.5) {
-                                text.textContent = '⚽ GOAL!';
-                            }
-                        }, timeOffset * 1000);
-
-                        timeOffset += 1.0;
-                    }
+                            if (log) log.textContent = `⚽ GOAL FOR ${attackingTeam.toUpperCase()}!`;
+                        }, goalTimeInMs);
+                    });
                 }
             };
             updateCommentary();
