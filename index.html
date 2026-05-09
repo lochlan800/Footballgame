@@ -1056,28 +1056,30 @@
                 const canAfford = gameState.budget >= player.price;
                 const playerTeamName = player.team;
                 const btnColor = canAfford ? '#4caf50' : '#999';
-                const btnText = canAfford ? 'BUY' : 'NOT AFFORDABLE';
+                const btnText = canAfford ? '✓ BUY' : '✗ UNAFFORDABLE';
 
                 return `
-                    <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid ${canAfford ? '#4caf50' : '#ddd'}; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-                        <div style="flex: 1;">
-                            <div style="font-weight: bold; margin-bottom: 5px;">${player.name}</div>
-                            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">
-                                <span style="background: #667eea; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-right: 5px;">${player.position}</span>
-                                <span>${playerTeamName}</span>
+                    <div style="background: white; padding: 12px; border-radius: 8px; border: 2px solid ${canAfford ? '#4caf50' : '#ddd'}; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: bold; margin-bottom: 4px; font-size: 0.95em;">${player.name}</div>
+                                <div style="font-size: 0.8em; color: #666; margin-bottom: 4px;">
+                                    <span style="background: #667eea; color: white; padding: 2px 5px; border-radius: 3px; margin-right: 5px;">${player.position.substring(0, 3)}</span>
+                                    <span>${playerTeamName}</span>
+                                </div>
+                                <div style="font-size: 0.75em; line-height: 1.4;">
+                                    ⭐${player.strength} | £${player.price}M | £${player.wage}M/wk
+                                </div>
                             </div>
-                            <div style="font-size: 0.85em;">
-                                ⭐ ${player.strength}/100 | £${player.price}M | £${player.wage}M/week
-                            </div>
+                            <button onclick="buyPlayer('${player.name}', '${playerTeamName}', ${player.price})" style="background: ${btnColor}; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; font-weight: bold; font-size: 0.75em; white-space: nowrap; flex-shrink: 0;">${btnText}</button>
                         </div>
-                        <button onclick="buyPlayer('${player.name}', '${playerTeamName}', ${player.price})" style="background: ${btnColor}; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; font-weight: bold; margin-left: 20px;">${btnText}</button>
                     </div>
                 `;
             }).join('');
 
             const content = `
-                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                    <strong>Your Budget:</strong> £${gameState.budget.toFixed(2)}M | <strong>Squad Size:</strong> ${gameState.squad.length}
+                <div style="background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em;">
+                    <strong>Budget:</strong> £${gameState.budget.toFixed(2)}M | <strong>Squad:</strong> ${gameState.squad.length} players
                 </div>
                 ${playerCards}
             `;
