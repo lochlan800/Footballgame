@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premier League Football Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .team-btn {
+            padding: 15px;
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .team-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .opponent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .opponent-btn {
+            padding: 10px;
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .opponent-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button.menu-btn {
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button.menu-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .match-result {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #667eea;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .match-result h2 {
+            font-size: 2em;
+            margin: 10px 0;
+            color: #333;
+        }
+
+        .match-result.win {
+            border-left-color: #4caf50;
+            background: #f1f8f6;
+        }
+
+        .match-result.win h3 {
+            color: #4caf50;
+        }
+
+        .match-result.loss {
+            border-left-color: #f44336;
+            background: #fef7f7;
+        }
+
+        .match-result.loss h3 {
+            color: #f44336;
+        }
+
+        .match-result.draw {
+            border-left-color: #ff9800;
+            background: #fff9f6;
+        }
+
+        .match-result.draw h3 {
+            color: #ff9800;
+        }
+
+        .standings {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .standings thead {
+            background: #667eea;
+            color: white;
+        }
+
+        .standings th, .standings td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .standings tbody tr:hover {
+            background: #f5f5f5;
+        }
+
+        .standings tbody tr.player-team {
+            background: #fffde7;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .back-btn {
+            background: #999;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .back-btn:hover {
+            background: #666;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚽ Premier League Manager</h1>
+            <p>Pick your team and lead them to glory!</p>
+        </div>
+
+        <div class="content">
+            <!-- Team Selection Screen -->
+            <div id="teamSelectionScreen" class="screen active">
+                <h2>Choose Your Team</h2>
+                <div class="team-grid" id="teamGrid"></div>
+            </div>
+
+            <!-- Main Menu Screen -->
+            <div id="mainMenuScreen" class="screen">
+                <h2>Main Menu</h2>
+                <p id="currentTeam" style="font-size: 1.2em; margin-bottom: 20px; color: #667eea; font-weight: bold;"></p>
+                <div class="menu">
+                    <button class="menu-btn" onclick="showPlayMatchScreen()">Play a Match</button>
+                    <button class="menu-btn" onclick="showStandingsScreen()">View Standings</button>
+                    <button class="menu-btn" onclick="showStatsScreen()">View Team Stats</button>
+                    <button class="menu-btn" onclick="resetGame()">New Game</button>
+                </div>
+            </div>
+
+            <!-- Play Match Screen -->
+            <div id="playMatchScreen" class="screen">
+                <h2>Choose Opponent</h2>
+                <div class="opponent-grid" id="opponentGrid"></div>
+                <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
+            </div>
+
+            <!-- Match Result Screen -->
+            <div id="matchResultScreen" class="screen">
+                <div id="resultContent"></div>
+                <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
+            </div>
+
+            <!-- Standings Screen -->
+            <div id="standingsScreen" class="screen">
+                <h2>League Standings</h2>
+                <table class="standings" id="standingsTable"></table>
+                <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
+            </div>
+
+            <!-- Stats Screen -->
+            <div id="statsScreen" class="screen">
+                <h2 id="statsTitle"></h2>
+                <div class="stats-grid" id="statsGrid"></div>
+                <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TEAMS = {
+            "Manchester United": { strength: 85 },
+            "Manchester City": { strength: 90 },
+            "Liverpool": { strength: 88 },
+            "Chelsea": { strength: 82 },
+            "Arsenal": { strength: 81 },
+            "Tottenham": { strength: 79 },
+            "Brighton": { strength: 76 },
+            "Newcastle": { strength: 77 },
+            "Aston Villa": { strength: 75 },
+            "West Ham": { strength: 72 }
+        };
+
+        let gameState = {
+            playerTeam: null,
+            teams: {}
+        };
+
+        function initGame() {
+            gameState.teams = {};
+            for (let team in TEAMS) {
+                gameState.teams[team] = {
+                    strength: TEAMS[team].strength,
+                    wins: 0,
+                    losses: 0,
+                    draws: 0,
+                    points: 0
+                };
+            }
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function renderTeamSelection() {
+            const grid = document.getElementById('teamGrid');
+            grid.innerHTML = '';
+            for (let team in TEAMS) {
+                const btn = document.createElement('button');
+                btn.className = 'team-btn';
+                btn.textContent = team;
+                btn.onclick = () => selectTeam(team);
+                grid.appendChild(btn);
+            }
+        }
+
+        function selectTeam(team) {
+            gameState.playerTeam = team;
+            document.getElementById('currentTeam').textContent = `You are managing: ${team}`;
+            showMainMenu();
+        }
+
+        function showMainMenu() {
+            showScreen('mainMenuScreen');
+        }
+
+        function showPlayMatchScreen() {
+            const grid = document.getElementById('opponentGrid');
+            grid.innerHTML = '';
+            for (let team in TEAMS) {
+                if (team !== gameState.playerTeam) {
+                    const btn = document.createElement('button');
+                    btn.className = 'opponent-btn';
+                    btn.textContent = team;
+                    btn.onclick = () => playMatch(team);
+                    grid.appendChild(btn);
+                }
+            }
+            showScreen('playMatchScreen');
+        }
+
+        function playMatch(opponent) {
+            const playerStrength = gameState.teams[gameState.playerTeam].strength;
+            const opponentStrength = gameState.teams[opponent].strength;
+
+            const playerScore = Math.floor(Math.random() * 4) + Math.floor(playerStrength / 30);
+            const opponentScore = Math.floor(Math.random() * 4) + Math.floor(opponentStrength / 30);
+
+            let result = '';
+            let resultClass = '';
+
+            if (playerScore > opponentScore) {
+                result = 'WON! 🎉';
+                resultClass = 'win';
+                gameState.teams[gameState.playerTeam].wins += 1;
+                gameState.teams[opponent].losses += 1;
+                gameState.teams[gameState.playerTeam].points += 3;
+            } else if (opponentScore > playerScore) {
+                result = 'LOST 😢';
+                resultClass = 'loss';
+                gameState.teams[gameState.playerTeam].losses += 1;
+                gameState.teams[opponent].wins += 1;
+                gameState.teams[opponent].points += 3;
+            } else {
+                result = 'DRAW';
+                resultClass = 'draw';
+                gameState.teams[gameState.playerTeam].draws += 1;
+                gameState.teams[opponent].draws += 1;
+                gameState.teams[gameState.playerTeam].points += 1;
+                gameState.teams[opponent].points += 1;
+            }
+
+            const content = document.getElementById('resultContent');
+            content.innerHTML = `
+                <div class="match-result ${resultClass}">
+                    <h3>${result}</h3>
+                    <h2>${gameState.playerTeam} ${playerScore} - ${opponentScore} ${opponent}</h2>
+                </div>
+            `;
+
+            showScreen('matchResultScreen');
+        }
+
+        function showStandingsScreen() {
+            const standings = Object.entries(gameState.teams)
+                .sort((a, b) => b[1].points - a[1].points)
+                .map((entry, index) => ({ ...entry[1], team: entry[0], position: index + 1 }));
+
+            const table = document.getElementById('standingsTable');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Position</th>
+                        <th>Team</th>
+                        <th>Points</th>
+                        <th>W</th>
+                        <th>D</th>
+                        <th>L</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${standings.map(team => `
+                        <tr ${team.team === gameState.playerTeam ? 'class="player-team"' : ''}>
+                            <td>${team.position}</td>
+                            <td>${team.team}${team.team === gameState.playerTeam ? ' ← YOU' : ''}</td>
+                            <td><strong>${team.points}</strong></td>
+                            <td>${team.wins}</td>
+                            <td>${team.draws}</td>
+                            <td>${team.losses}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+
+            showScreen('standingsScreen');
+        }
+
+        function showStatsScreen() {
+            const stats = gameState.teams[gameState.playerTeam];
+            document.getElementById('statsTitle').textContent = `${gameState.playerTeam} Stats`;
+
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="value">${stats.wins}</div>
+                    <div class="label">Wins</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">${stats.draws}</div>
+                    <div class="label">Draws</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">${stats.losses}</div>
+                    <div class="label">Losses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">${stats.points}</div>
+                    <div class="label">Points</div>
+                </div>
+            `;
+
+            showScreen('statsScreen');
+        }
+
+        function resetGame() {
+            initGame();
+            renderTeamSelection();
+            showScreen('teamSelectionScreen');
+        }
+
+        // Initialize on page load
+        initGame();
+        renderTeamSelection();
+    </script>
+</body>
+</html>
