@@ -661,6 +661,35 @@
             squad: [] // Array of player objects owned by the player
         };
 
+        function generateWeekResults() {
+            const results = [];
+            const allTeams = Object.keys(TEAMS).filter(t => t !== gameState.playerTeam);
+
+            // Shuffle teams and create matchups for this week
+            const shuffled = [...allTeams].sort(() => Math.random() - 0.5);
+
+            for (let i = 0; i < shuffled.length - 1; i += 2) {
+                const homeTeam = shuffled[i];
+                const awayTeam = shuffled[i + 1];
+
+                const homeStrength = gameState.teams[homeTeam].strength;
+                const awayStrength = gameState.teams[awayTeam].strength;
+
+                // Generate realistic score
+                const homeScore = Math.floor(Math.random() * 4) + Math.floor(homeStrength / 30);
+                const awayScore = Math.floor(Math.random() * 4) + Math.floor(awayStrength / 30);
+
+                results.push({
+                    home: homeTeam,
+                    away: awayTeam,
+                    homeScore: homeScore,
+                    awayScore: awayScore
+                });
+            }
+
+            return results;
+        }
+
         function generateSchedule() {
             const schedule = [];
             // Create 19 home and 19 away matches
@@ -916,7 +945,27 @@
                 gameState.seasonOver = true;
             }
 
-            showScreen('matchResultScreen');
+            // Generate results for other teams this week
+            const otherTeamsResults = generateWeekResults();
+
+            const otherResultsHTML = `
+                <div style="margin-top: 30px; padding-top: 30px; border-top: 3px solid #ddd;">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">⚽ Other Results - Week ${gameState.week}/38</h3>
+                    ${otherTeamsResults.map(result => `
+                        <div style="background: #f9f9f9; padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="flex: 1;">
+                                <strong>${result.home}</strong> vs <strong>${result.away}</strong>
+                            </div>
+                            <div style="font-weight: bold; font-size: 1.05em; color: #667eea; min-width: 60px; text-align: right;">
+                                ${result.homeScore} - ${result.awayScore}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            const content = document.getElementById('resultContent');
+            content.innerHTML += otherResultsHTML;
         }
 
         function showFixturesScreen() {
