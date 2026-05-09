@@ -621,8 +621,24 @@
             budget: 0,
             homeMatches: 0,
             week: 0,
-            seasonOver: false
+            seasonOver: false,
+            schedule: [] // Array of 38 items: true = home, false = away
         };
+
+        function generateSchedule() {
+            const schedule = [];
+            // Create 19 home and 19 away matches
+            for (let i = 0; i < 19; i++) {
+                schedule.push(true); // home
+                schedule.push(false); // away
+            }
+            // Shuffle the schedule randomly
+            for (let i = schedule.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [schedule[i], schedule[j]] = [schedule[j], schedule[i]];
+            }
+            return schedule;
+        }
 
         function initGame() {
             gameState.teams = {};
@@ -698,6 +714,7 @@
         function selectTeamFromDetails() {
             gameState.playerTeam = gameState.selectedTeam;
             gameState.budget = TEAMS[gameState.playerTeam].budget;
+            gameState.schedule = generateSchedule(); // Generate home/away schedule
             document.getElementById('currentTeam').textContent = `You are managing: ${gameState.playerTeam}`;
             showMainMenu();
         }
@@ -717,8 +734,12 @@
         }
 
         function showPlayMatchScreen() {
+            const isHome = gameState.schedule[gameState.week];
+            const matchType = isHome ? '🏠 HOME' : '✈️ AWAY';
+
             const grid = document.getElementById('opponentGrid');
-            grid.innerHTML = '';
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; margin-bottom: 20px; font-size: 1.3em; font-weight: bold; color: ${isHome ? '#4caf50' : '#f44336'};">Week ${gameState.week + 1}/38 - ${matchType}</div>`;
+
             for (let team in TEAMS) {
                 if (team !== gameState.playerTeam) {
                     const btn = document.createElement('button');
@@ -768,6 +789,10 @@
                 gameState.teams[opponent].points += 1;
             }
 
+            // Check if this week is home or away
+            const isHome = gameState.schedule[gameState.week];
+            const matchTypeDisplay = isHome ? '🏠 HOME' : '✈️ AWAY';
+
             // Increment week
             gameState.week += 1;
 
@@ -778,11 +803,27 @@
 
             // Home match - earn ticket revenue
             let ticketRevenue = 0;
+            let attendanceInfo = '';
             const stadium = gameState.teams[gameState.playerTeam].stadium;
-            const attendance = Math.floor(stadium.capacity * (0.7 + Math.random() * 0.3)); // 70-100% capacity
-            ticketRevenue = (attendance * stadium.ticketPrice) / 1000000; // Convert to millions
-            gameState.budget += ticketRevenue;
-            gameState.homeMatches += 1;
+
+            if (isHome) {
+                const attendance = Math.floor(stadium.capacity * (0.7 + Math.random() * 0.3)); // 70-100% capacity
+                ticketRevenue = (attendance * stadium.ticketPrice) / 1000000; // Convert to millions
+                gameState.budget += ticketRevenue;
+                gameState.homeMatches += 1;
+                attendanceInfo = `
+                    <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #ddd;">
+                        <div style="margin-bottom: 10px;"><strong>Attendance:</strong> ${attendance.toLocaleString()} fans at ${stadium.name}</div>
+                        <div style="color: #4caf50; font-weight: bold;">+£${ticketRevenue.toFixed(2)}M from ticket sales</div>
+                    </div>
+                `;
+            } else {
+                attendanceInfo = `
+                    <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #ddd;">
+                        <div style="margin-bottom: 10px;"><strong>Away Match</strong> - No ticket revenue</div>
+                    </div>
+                `;
+            }
 
             // Check if season is over
             const seasonOverMsg = gameState.week >= 38 ? '<div style="color: #ff9800; font-weight: bold; margin-top: 15px; font-size: 1.1em;">🏁 SEASON COMPLETE! Go to main menu for final results.</div>' : '';
@@ -791,13 +832,10 @@
             content.innerHTML = `
                 <div class="match-result ${resultClass}">
                     <h3>${result}</h3>
-                    <h2>Week ${gameState.week}/38</h2>
+                    <h2>Week ${gameState.week}/38 ${matchTypeDisplay}</h2>
                     <h2>${gameState.playerTeam} ${playerScore} - ${opponentScore} ${opponent}</h2>
                     <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px;">
-                        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #ddd;">
-                            <div style="margin-bottom: 10px;"><strong>Attendance:</strong> ${attendance.toLocaleString()} fans</div>
-                            <div style="color: #4caf50; font-weight: bold;">+£${ticketRevenue.toFixed(2)}M from ticket sales</div>
-                        </div>
+                        ${attendanceInfo}
                         <div style="margin-top: 10px;">
                             <div style="margin-bottom: 10px; color: #f44336; font-weight: bold;">-£${weeklyWages.toFixed(2)}M weekly wages</div>
                             <div style="color: #667eea; font-weight: bold; font-size: 1.1em;">Budget: £${gameState.budget.toFixed(2)}M</div>
