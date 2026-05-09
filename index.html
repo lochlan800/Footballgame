@@ -322,6 +322,7 @@
                 <p id="budgetDisplay" style="font-size: 1.1em; margin-bottom: 20px; color: #4caf50; font-weight: bold;"></p>
                 <div class="menu">
                     <button class="menu-btn" onclick="showPlayMatchScreen()">Play a Match</button>
+                    <button class="menu-btn" onclick="showFixturesScreen()">Fixtures</button>
                     <button class="menu-btn" onclick="showStandingsScreen()">View Standings</button>
                     <button class="menu-btn" onclick="showSquadScreen()">My Squad</button>
                     <button class="menu-btn" onclick="showStatsScreen()">Team Stats</button>
@@ -348,6 +349,13 @@
             <div id="standingsScreen" class="screen">
                 <h2>League Standings</h2>
                 <table class="standings" id="standingsTable"></table>
+                <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
+            </div>
+
+            <!-- Fixtures Screen -->
+            <div id="fixturesScreen" class="screen">
+                <h2>Fixtures</h2>
+                <div id="fixturesContent"></div>
                 <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
             </div>
 
@@ -909,6 +917,89 @@
             }
 
             showScreen('matchResultScreen');
+        }
+
+        function showFixturesScreen() {
+            let content = '<div style="margin-bottom: 20px;">';
+
+            // Show your team's upcoming fixtures
+            content += '<h3 style="color: #667eea; margin-bottom: 15px;">📅 ' + gameState.playerTeam + ' - Upcoming Fixtures</h3>';
+
+            let hasUpcoming = false;
+            for (let week = gameState.week; week < Math.min(gameState.week + 10, 38); week++) {
+                const isHome = gameState.schedule[week];
+                const matchType = isHome ? '🏠 HOME' : '✈️ AWAY';
+
+                content += `
+                    <div style="background: white; padding: 12px; border-radius: 8px; border-left: 4px solid ${isHome ? '#4caf50' : '#f44336'}; margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>Week ${week + 1}</strong> ${matchType}
+                            </div>
+                            <div style="font-size: 0.85em; color: #999;">${week === gameState.week ? '← NEXT MATCH' : 'Upcoming'}</div>
+                        </div>
+                    </div>
+                `;
+                hasUpcoming = true;
+            }
+
+            if (!hasUpcoming) {
+                content += '<div style="background: #f9f9f9; padding: 15px; border-radius: 8px; color: #999;">Season complete!</div>';
+            }
+
+            content += '</div>';
+
+            // Show other teams' upcoming matches
+            content += '<h3 style="color: #667eea; margin-bottom: 15px;">⚽ Other Teams - Upcoming Matches</h3>';
+
+            const allTeams = Object.keys(TEAMS).filter(t => t !== gameState.playerTeam);
+            const matchups = [];
+
+            for (let week = gameState.week; week < Math.min(gameState.week + 5, 38); week++) {
+                // Generate matchups for this week
+                const weekMatches = [];
+
+                // Simple approach: pair up teams
+                const shuffled = [...allTeams].sort(() => Math.random() - 0.5);
+                for (let i = 0; i < shuffled.length - 1; i += 2) {
+                    weekMatches.push({
+                        week: week,
+                        home: shuffled[i],
+                        away: shuffled[i + 1]
+                    });
+                }
+                matchups.push(...weekMatches);
+            }
+
+            // Group by week
+            const matchesByWeek = {};
+            matchups.forEach(match => {
+                if (!matchesByWeek[match.week]) {
+                    matchesByWeek[match.week] = [];
+                }
+                matchesByWeek[match.week].push(match);
+            });
+
+            // Display matches grouped by week
+            for (let week in matchesByWeek) {
+                content += `<div style="margin-bottom: 15px;"><strong style="color: #999;">Week ${parseInt(week) + 1}</strong></div>`;
+
+                matchesByWeek[week].forEach(match => {
+                    content += `
+                        <div style="background: white; padding: 10px; border-radius: 6px; border-left: 4px solid #667eea; margin-bottom: 6px; font-size: 0.85em;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong>${match.home}</strong> 🏠 vs ✈️ <strong>${match.away}</strong>
+                                </div>
+                                <div style="color: #999; font-size: 0.8em;">Week ${parseInt(week) + 1}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('fixturesContent').innerHTML = content;
+            showScreen('fixturesScreen');
         }
 
         function showSquadScreen() {
