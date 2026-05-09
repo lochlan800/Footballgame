@@ -748,10 +748,16 @@
                 gameState.teams[opponent].points += 1;
             }
 
+            // Calculate total weekly wages
+            const teamPlayers = TEAMS[gameState.playerTeam].players;
+            const weeklyWages = teamPlayers.reduce((sum, p) => sum + p.wage, 0);
+            gameState.budget -= weeklyWages;
+
             // Home match - earn ticket revenue
+            let ticketRevenue = 0;
             const stadium = gameState.teams[gameState.playerTeam].stadium;
             const attendance = Math.floor(stadium.capacity * (0.7 + Math.random() * 0.3)); // 70-100% capacity
-            const ticketRevenue = (attendance * stadium.ticketPrice) / 1000000; // Convert to millions
+            ticketRevenue = (attendance * stadium.ticketPrice) / 1000000; // Convert to millions
             gameState.budget += ticketRevenue;
             gameState.homeMatches += 1;
 
@@ -761,9 +767,14 @@
                     <h3>${result}</h3>
                     <h2>${gameState.playerTeam} ${playerScore} - ${opponentScore} ${opponent}</h2>
                     <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px;">
-                        <div style="margin-bottom: 10px;"><strong>Attendance:</strong> ${attendance.toLocaleString()} fans</div>
-                        <div style="color: #4caf50; font-weight: bold;">+£${ticketRevenue.toFixed(2)}M from ticket sales</div>
-                        <div style="margin-top: 10px; color: #667eea;"><strong>Budget: £${gameState.budget.toFixed(2)}M</strong></div>
+                        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #ddd;">
+                            <div style="margin-bottom: 10px;"><strong>Attendance:</strong> ${attendance.toLocaleString()} fans</div>
+                            <div style="color: #4caf50; font-weight: bold;">+£${ticketRevenue.toFixed(2)}M from ticket sales</div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <div style="margin-bottom: 10px; color: #f44336; font-weight: bold;">-£${weeklyWages.toFixed(2)}M weekly wages</div>
+                            <div style="color: #667eea; font-weight: bold; font-size: 1.1em;">Budget: £${gameState.budget.toFixed(2)}M</div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -841,6 +852,9 @@
         function showFinancesScreen() {
             const stadium = gameState.teams[gameState.playerTeam].stadium;
             const totalRevenue = (gameState.homeMatches * stadium.capacity * stadium.ticketPrice * 0.85) / 1000000;
+            const teamPlayers = TEAMS[gameState.playerTeam].players;
+            const weeklyWages = teamPlayers.reduce((sum, p) => sum + p.wage, 0);
+            const totalWagesPaid = weeklyWages * gameState.homeMatches;
 
             const content = `
                 <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
@@ -861,10 +875,14 @@
                 </div>
 
                 <div style="background: #f0f0f0; padding: 15px; border-radius: 8px;">
-                    <h4 style="margin-top: 0;">📊 Financial Summary</h4>
+                    <h4 style="margin-top: 0;">💰 Income</h4>
                     <div style="margin-bottom: 10px;"><strong>Home Matches Played:</strong> ${gameState.homeMatches}</div>
-                    <div style="margin-bottom: 10px;"><strong>Total Revenue:</strong> £${totalRevenue.toFixed(2)}M</div>
-                    <div><strong>Average Attendance:</strong> ~${Math.round(stadium.capacity * 0.85).toLocaleString()} fans/match</div>
+                    <div style="margin-bottom: 10px; color: #4caf50;"><strong>Total Ticket Revenue:</strong> +£${totalRevenue.toFixed(2)}M</div>
+                    <div style="margin-bottom: 20px;"><strong>Average Attendance:</strong> ~${Math.round(stadium.capacity * 0.85).toLocaleString()} fans/match</div>
+
+                    <h4>💸 Expenses</h4>
+                    <div style="margin-bottom: 10px;"><strong>Weekly Wages:</strong> £${weeklyWages.toFixed(2)}M/week</div>
+                    <div style="color: #f44336;"><strong>Total Wages Paid:</strong> -£${totalWagesPaid.toFixed(2)}M</div>
                 </div>
             `;
 
