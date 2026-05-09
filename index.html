@@ -1191,8 +1191,8 @@
             if (totalGoals === 0) {
                 animationCSS += `
                     @keyframes ballMovePossession {
-                        0%, 100% { cx: 500; cy: 300; }
-                        50% { cx: 500; cy: 300; }
+                        0%, 100% { transform: translateX(0); }
+                        50% { transform: translateX(0); }
                     }
                     @keyframes commentaryFade {
                         0% { opacity: 0; }
@@ -1219,24 +1219,28 @@
 
                     const keyframeName = `ballMove${i}`;
                     const moveDuration = 1.5;
-                    const goalMinute = goalTimes[i];
+                    const goalMinute = goalTimes[i] || (i * 20 + 15); // Fallback timing if needed
                     const goalTimeInSeconds = goalMinute * secondsPerMinute;
                     const goalStartTime = Math.max(0, goalTimeInSeconds - 0.75);
 
-                    // Ball movement keyframes
+                    // Ball movement keyframes using transform
+                    const distance = endX - startX;
                     animationCSS += `
                         @keyframes ${keyframeName} {
-                            0% { cx: ${startX}; cy: ${startY}; }
-                            100% { cx: ${endX}; cy: ${startY}; }
+                            0% { transform: translateX(0); }
+                            100% { transform: translateX(${distance}px); }
                         }
                     `;
 
                     ballAnimations.push(`${keyframeName} ${moveDuration}s linear ${goalStartTime}s`);
                 }
 
+                // Ensure we always have a valid animation
+                let animationValue = ballAnimations.length > 0 ? ballAnimations.join(', ') : 'none';
+
                 animationCSS += `
                     #animBall {
-                        animation: ${ballAnimations.join(', ')};
+                        animation: ${animationValue};
                         animation-fill-mode: forwards;
                     }
                     #commentaryText {
