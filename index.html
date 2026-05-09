@@ -1209,7 +1209,7 @@
                     }
                 `;
             } else {
-                let animationSequence = '';
+                let ballAnimations = [];
 
                 for (let i = 0; i < goalSequence.length; i++) {
                     const isPlayerGoal = goalSequence[i] === 'player';
@@ -1231,13 +1231,12 @@
                         }
                     `;
 
-                    animationSequence += `${keyframeName} ${moveDuration}s linear ${goalStartTime}s,`;
+                    ballAnimations.push(`${keyframeName} ${moveDuration}s linear ${goalStartTime}s`);
                 }
 
-                animationSequence = animationSequence.slice(0, -1);
                 animationCSS += `
                     #animBall {
-                        animation: ${animationSequence};
+                        animation: ${ballAnimations.join(', ')};
                         animation-fill-mode: forwards;
                     }
                     #commentaryText {
