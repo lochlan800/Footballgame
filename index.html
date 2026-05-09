@@ -679,6 +679,22 @@
                 const homeScore = Math.floor(Math.random() * 4) + Math.floor(homeStrength / 30);
                 const awayScore = Math.floor(Math.random() * 4) + Math.floor(awayStrength / 30);
 
+                // Update standings for both teams
+                if (homeScore > awayScore) {
+                    gameState.teams[homeTeam].wins += 1;
+                    gameState.teams[awayTeam].losses += 1;
+                    gameState.teams[homeTeam].points += 3;
+                } else if (awayScore > homeScore) {
+                    gameState.teams[homeTeam].losses += 1;
+                    gameState.teams[awayTeam].wins += 1;
+                    gameState.teams[awayTeam].points += 3;
+                } else {
+                    gameState.teams[homeTeam].draws += 1;
+                    gameState.teams[awayTeam].draws += 1;
+                    gameState.teams[homeTeam].points += 1;
+                    gameState.teams[awayTeam].points += 1;
+                }
+
                 results.push({
                     home: homeTeam,
                     away: awayTeam,
