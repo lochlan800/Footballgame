@@ -367,12 +367,9 @@
             <!-- Transfers Screen -->
             <div id="transfersScreen" class="screen">
                 <h2>Transfer Market</h2>
-                <div style="margin-bottom: 20px;">
-                    <button class="menu-btn" style="width: 23%; margin-right: 1%; display: inline-block;" onclick="filterTransfers('All')">All</button>
-                    <button class="menu-btn" style="width: 23%; margin-right: 1%; display: inline-block;" onclick="filterTransfers('Goalkeeper')">Goalkeepers</button>
-                    <button class="menu-btn" style="width: 23%; margin-right: 1%; display: inline-block;" onclick="filterTransfers('Defender')">Defenders</button>
-                    <button class="menu-btn" style="width: 23%; margin-right: 1%; display: inline-block;" onclick="filterTransfers('Midfielder')">Midfielders</button>
-                    <button class="menu-btn" style="width: 23%; display: inline-block;" onclick="filterTransfers('Forward')">Forwards</button>
+                <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+                    <button class="menu-btn" style="flex: 1;" onclick="showBuyPlayers()">Buy Players</button>
+                    <button class="menu-btn" style="flex: 1;" onclick="showSellPlayers()">Sell Players</button>
                 </div>
                 <div id="transfersContent"></div>
                 <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
@@ -752,6 +749,12 @@
         }
 
         function showPlayMatchScreen() {
+            // Check if budget is negative
+            if (gameState.budget < 0) {
+                alert('❌ BANKRUPT! You have no money!\n\nYou must sell players to get funds before playing.\n\nGo to Transfers > Sell Players');
+                return;
+            }
+
             const isHome = gameState.schedule[gameState.week];
             const matchType = isHome ? '🏠 HOME' : '✈️ AWAY';
 
@@ -1016,16 +1019,85 @@
         }
 
         let currentTransferFilter = 'All';
+        let currentTransferMode = 'buy'; // 'buy' or 'sell'
 
         function showTransfersScreen() {
             currentTransferFilter = 'All';
-            displayTransferMarket();
+            currentTransferMode = 'buy';
+            showBuyPlayers();
             showScreen('transfersScreen');
+        }
+
+        function showBuyPlayers() {
+            currentTransferMode = 'buy';
+            currentTransferFilter = 'All';
+            displayTransferMarket();
+        }
+
+        function showSellPlayers() {
+            currentTransferMode = 'sell';
+            displaySellMarket();
         }
 
         function filterTransfers(position) {
             currentTransferFilter = position;
             displayTransferMarket();
+        }
+
+        function displaySellMarket() {
+            // Get your squad players
+            const squadPlayers = gameState.squad;
+
+            if (squadPlayers.length === 0) {
+                document.getElementById('transfersContent').innerHTML = '<div style="text-align: center; padding: 40px; color: #999;"><strong>No players to sell!</strong></div>';
+                return;
+            }
+
+            // Sort by price descending
+            const sorted = [...squadPlayers].sort((a, b) => b.price - a.price);
+
+            // Generate player cards with sell buttons
+            const playerCards = sorted.map((player, index) => {
+                return `
+                    <div style="background: white; padding: 12px; border-radius: 8px; border: 2px solid #f44336; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: bold; margin-bottom: 4px; font-size: 0.95em;">${player.name}</div>
+                                <div style="font-size: 0.8em; color: #666; margin-bottom: 4px;">
+                                    <span style="background: #667eea; color: white; padding: 2px 5px; border-radius: 3px; margin-right: 5px;">${player.position.substring(0, 3)}</span>
+                                    <span>⭐${player.strength}</span>
+                                </div>
+                                <div style="font-size: 0.75em; color: #4caf50; font-weight: bold;">
+                                    Sell for: £${player.price}M
+                                </div>
+                            </div>
+                            <button onclick="sellPlayer(${index})" style="background: #f44336; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.75em; white-space: nowrap; flex-shrink: 0;">SELL</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const content = `
+                <div style="background: #fef7f7; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; border: 2px solid #f44336;">
+                    <strong style="color: #f44336;">⚠️ Current Budget: £${gameState.budget.toFixed(2)}M</strong>
+                </div>
+                <div style="margin-bottom: 15px; font-size: 0.85em; color: #666;">
+                    <strong>Your Squad (${gameState.squad.length} players)</strong><br>
+                    Click SELL to get cash and free up squad space.
+                </div>
+                ${playerCards}
+            `;
+
+            document.getElementById('transfersContent').innerHTML = content;
+        }
+
+        function sellPlayer(playerIndex) {
+            const player = gameState.squad[playerIndex];
+            gameState.budget += player.price;
+            gameState.squad.splice(playerIndex, 1);
+
+            alert(`✅ ${player.name} sold!\n\nIncome: +£${player.price}M\nNew Budget: £${gameState.budget.toFixed(2)}M`);
+            displaySellMarket();
         }
 
         function displayTransferMarket() {
@@ -1077,10 +1149,21 @@
                 `;
             }).join('');
 
+            const filterButtons = `
+                <div style="margin-bottom: 15px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+                    <button class="opponent-btn" style="padding: 8px; font-size: 0.8em;" onclick="currentTransferFilter='All'; displayTransferMarket();">All</button>
+                    <button class="opponent-btn" style="padding: 8px; font-size: 0.8em;" onclick="currentTransferFilter='Goalkeeper'; displayTransferMarket();">GK</button>
+                    <button class="opponent-btn" style="padding: 8px; font-size: 0.8em;" onclick="currentTransferFilter='Defender'; displayTransferMarket();">DF</button>
+                    <button class="opponent-btn" style="padding: 8px; font-size: 0.8em;" onclick="currentTransferFilter='Midfielder'; displayTransferMarket();">MF</button>
+                    <button class="opponent-btn" style="padding: 8px; font-size: 0.8em;" onclick="currentTransferFilter='Forward'; displayTransferMarket();">FW</button>
+                </div>
+            `;
+
             const content = `
                 <div style="background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em;">
                     <strong>Budget:</strong> £${gameState.budget.toFixed(2)}M | <strong>Squad:</strong> ${gameState.squad.length} players
                 </div>
+                ${filterButtons}
                 ${playerCards}
             `;
 
