@@ -323,7 +323,8 @@
                 <div class="menu">
                     <button class="menu-btn" onclick="showPlayMatchScreen()">Play a Match</button>
                     <button class="menu-btn" onclick="showStandingsScreen()">View Standings</button>
-                    <button class="menu-btn" onclick="showStatsScreen()">View Team Stats</button>
+                    <button class="menu-btn" onclick="showSquadScreen()">My Squad</button>
+                    <button class="menu-btn" onclick="showStatsScreen()">Team Stats</button>
                     <button class="menu-btn" onclick="showTransfersScreen()">Transfers</button>
                     <button class="menu-btn" onclick="showFinancesScreen()">Stadium & Budget</button>
                     <button class="menu-btn" onclick="resetGame()">New Game</button>
@@ -348,6 +349,20 @@
                 <h2>League Standings</h2>
                 <table class="standings" id="standingsTable"></table>
                 <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
+            </div>
+
+            <!-- My Squad Screen -->
+            <div id="squadScreen" class="screen">
+                <h2>My Squad</h2>
+                <div id="squadContent"></div>
+                <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
+            </div>
+
+            <!-- Player Details Screen -->
+            <div id="playerDetailsScreen" class="screen">
+                <h2 id="playerDetailsTitle"></h2>
+                <div id="playerDetailsContent"></div>
+                <button class="back-btn" onclick="showSquadScreen()">Back to Squad</button>
             </div>
 
             <!-- Stats Screen -->
@@ -872,6 +887,100 @@
             }
 
             showScreen('matchResultScreen');
+        }
+
+        function showSquadScreen() {
+            const sorted = [...gameState.squad].sort((a, b) => {
+                const posOrder = { 'Goalkeeper': 0, 'Defender': 1, 'Midfielder': 2, 'Forward': 3 };
+                return posOrder[a.position] - posOrder[b.position];
+            });
+
+            const playersByPos = {
+                'Goalkeeper': sorted.filter(p => p.position === 'Goalkeeper'),
+                'Defender': sorted.filter(p => p.position === 'Defender'),
+                'Midfielder': sorted.filter(p => p.position === 'Midfielder'),
+                'Forward': sorted.filter(p => p.position === 'Forward')
+            };
+
+            let content = '<div style="margin-bottom: 15px; font-size: 0.9em; background: #f9f9f9; padding: 12px; border-radius: 8px;"><strong>Squad Size:</strong> ' + gameState.squad.length + ' players</div>';
+
+            for (let pos in playersByPos) {
+                if (playersByPos[pos].length > 0) {
+                    content += `<h3 style="color: #667eea; margin-top: 20px; margin-bottom: 10px;">${pos}s (${playersByPos[pos].length})</h3>`;
+                    content += playersByPos[pos].map((player, idx) => {
+                        return `
+                            <div style="background: white; padding: 12px; border-radius: 8px; border-left: 4px solid #667eea; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='white'" onclick="showPlayerDetails(${gameState.squad.indexOf(player)})">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-weight: bold; font-size: 1em;">${player.name}</div>
+                                        <div style="font-size: 0.8em; color: #666; margin-top: 4px;">
+                                            ⭐ ${player.strength}/100 | £${player.price}M | £${player.wage}M/week
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right; font-size: 0.8em; color: #999;">Click to view details</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
+            document.getElementById('squadContent').innerHTML = content;
+            showScreen('squadScreen');
+        }
+
+        function showPlayerDetails(playerIndex) {
+            const player = gameState.squad[playerIndex];
+
+            const content = `
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h2 style="margin: 0; font-size: 2em;">${player.name}</h2>
+                    <div style="margin-top: 10px; font-size: 1.1em;">
+                        <span style="background: rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 4px; margin-right: 10px;">${player.position}</span>
+                        <span>⭐ ${player.strength}/100</span>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+                    <div class="stat-card">
+                        <div class="value">£${player.price}M</div>
+                        <div class="label">Market Value</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">£${player.wage}M</div>
+                        <div class="label">Weekly Wage</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">${player.strength}</div>
+                        <div class="label">Player Strength</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">${player.position}</div>
+                        <div class="label">Position</div>
+                    </div>
+                </div>
+
+                <div style="background: #fff3cd; border: 2px solid #ffc107; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong style="color: #856404;">Annual Wage Cost:</strong>
+                    <div style="font-size: 1.3em; color: #ff9800; font-weight: bold;">£${(player.wage * 52).toFixed(2)}M per year</div>
+                </div>
+
+                <button onclick="confirmSellPlayer(${playerIndex})" style="background: #f44336; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1em; width: 100%;">SELL PLAYER - Get £${player.price}M</button>
+            `;
+
+            document.getElementById('playerDetailsTitle').textContent = player.name;
+            document.getElementById('playerDetailsContent').innerHTML = content;
+            showScreen('playerDetailsScreen');
+        }
+
+        function confirmSellPlayer(playerIndex) {
+            const player = gameState.squad[playerIndex];
+            if (confirm(`Sell ${player.name} for £${player.price}M?`)) {
+                gameState.budget += player.price;
+                gameState.squad.splice(playerIndex, 1);
+                alert(`✅ ${player.name} sold!\n\nIncome: +£${player.price}M\nNew Budget: £${gameState.budget.toFixed(2)}M`);
+                showSquadScreen();
+            }
         }
 
         function showStandingsScreen() {
