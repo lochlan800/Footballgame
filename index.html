@@ -975,12 +975,83 @@
 
         function confirmSellPlayer(playerIndex) {
             const player = gameState.squad[playerIndex];
-            if (confirm(`Sell ${player.name} for £${player.price}M?`)) {
-                gameState.budget += player.price;
-                gameState.squad.splice(playerIndex, 1);
-                alert(`✅ ${player.name} sold!\n\nIncome: +£${player.price}M\nNew Budget: £${gameState.budget.toFixed(2)}M`);
-                showSquadScreen();
-            }
+
+            // Generate offers from other teams
+            const offers = generatePlayerOffers(player);
+
+            let offersHTML = '<h3 style="color: #667eea; margin-bottom: 15px;">Offers Received:</h3>';
+            offersHTML += offers.map((offer, idx) => {
+                const difference = offer.price - player.price;
+                const differenceText = difference > 0 ? `<span style="color: #4caf50;">+£${difference}M above market</span>` : `<span style="color: #f44336;">-£${Math.abs(difference)}M below market</span>`;
+
+                return `
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #667eea; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 8px;">${offer.team}</div>
+                                <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Bid: <span style="font-weight: bold; color: #4caf50; font-size: 1.1em;">£${offer.price}M</span></div>
+                                <div style="font-size: 0.8em;">${differenceText}</div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="acceptOffer(${playerIndex}, ${offer.price})" style="background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">✓ ACCEPT</button>
+                                <button onclick="rejectOffer()" style="background: #999; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">✗ REJECT</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const content = `
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+                    <strong>${player.name}</strong> - Market Value: £${player.price}M<br>
+                    <span style="font-size: 0.9em; color: #666;">Multiple teams are interested in signing this player</span>
+                </div>
+                ${offersHTML}
+                <button onclick="showPlayerDetails(${playerIndex})" style="background: #999; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px;">← Back</button>
+            `;
+
+            document.getElementById('playerDetailsContent').innerHTML = content;
+        }
+
+        function generatePlayerOffers(player) {
+            const offers = [];
+            const basePrice = player.price;
+            const strength = player.strength;
+
+            // Generate 3-5 random offers from different teams
+            const numOffers = Math.floor(Math.random() * 3) + 3; // 3-5 offers
+            const otherTeams = Object.keys(TEAMS).filter(t => t !== gameState.playerTeam);
+
+            // Shuffle and pick random teams
+            const selectedTeams = otherTeams.sort(() => Math.random() - 0.5).slice(0, numOffers);
+
+            selectedTeams.forEach(team => {
+                // Price variation based on player strength and random factors
+                const strengthFactor = (strength - 70) / 30; // -1 to 1 scale
+                const randomFactor = (Math.random() - 0.5) * 2; // -1 to 1
+                const priceVariation = basePrice * (0.7 + (strengthFactor * 0.3) + (randomFactor * 0.2));
+                const finalPrice = Math.round(priceVariation * 10) / 10; // Round to 1 decimal
+
+                offers.push({
+                    team: team,
+                    price: Math.max(finalPrice, basePrice * 0.5) // At least 50% of base price
+                });
+            });
+
+            // Sort by price descending
+            return offers.sort((a, b) => b.price - a.price);
+        }
+
+        function acceptOffer(playerIndex, offerPrice) {
+            const player = gameState.squad[playerIndex];
+            gameState.budget += offerPrice;
+            gameState.squad.splice(playerIndex, 1);
+            alert(`✅ TRANSFER COMPLETE!\n\n${player.name} has been sold!\n\nSale Price: £${offerPrice}M\nNew Budget: £${gameState.budget.toFixed(2)}M`);
+            showSquadScreen();
+        }
+
+        function rejectOffer() {
+            alert('Offer rejected. The player remains in your squad.');
         }
 
         function showStandingsScreen() {
