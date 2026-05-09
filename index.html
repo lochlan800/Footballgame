@@ -324,6 +324,7 @@
                     <button class="menu-btn" onclick="showPlayMatchScreen()">Play a Match</button>
                     <button class="menu-btn" onclick="showStandingsScreen()">View Standings</button>
                     <button class="menu-btn" onclick="showStatsScreen()">View Team Stats</button>
+                    <button class="menu-btn" onclick="showTransfersScreen()">Transfers</button>
                     <button class="menu-btn" onclick="showFinancesScreen()">Stadium & Budget</button>
                     <button class="menu-btn" onclick="resetGame()">New Game</button>
                 </div>
@@ -360,6 +361,20 @@
             <div id="financesScreen" class="screen">
                 <h2>Stadium & Budget</h2>
                 <div id="financesContent"></div>
+                <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
+            </div>
+
+            <!-- Transfers Screen -->
+            <div id="transfersScreen" class="screen">
+                <h2>Transfer Market</h2>
+                <div style="margin-bottom: 20px;">
+                    <button class="menu-btn" style="width: 23%; margin-right: 1%; display: inline-block;" onclick="filterTransfers('All')">All</button>
+                    <button class="menu-btn" style="width: 23%; margin-right: 1%; display: inline-block;" onclick="filterTransfers('Goalkeeper')">Goalkeepers</button>
+                    <button class="menu-btn" style="width: 23%; margin-right: 1%; display: inline-block;" onclick="filterTransfers('Defender')">Defenders</button>
+                    <button class="menu-btn" style="width: 23%; margin-right: 1%; display: inline-block;" onclick="filterTransfers('Midfielder')">Midfielders</button>
+                    <button class="menu-btn" style="width: 23%; display: inline-block;" onclick="filterTransfers('Forward')">Forwards</button>
+                </div>
+                <div id="transfersContent"></div>
                 <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
             </div>
 
@@ -622,7 +637,8 @@
             homeMatches: 0,
             week: 0,
             seasonOver: false,
-            schedule: [] // Array of 38 items: true = home, false = away
+            schedule: [], // Array of 38 items: true = home, false = away
+            squad: [] // Array of player objects owned by the player
         };
 
         function generateSchedule() {
@@ -716,6 +732,7 @@
             gameState.playerTeam = gameState.selectedTeam;
             gameState.budget = TEAMS[gameState.playerTeam].budget;
             gameState.schedule = generateSchedule(); // Generate home/away schedule
+            gameState.squad = TEAMS[gameState.playerTeam].players.map(p => ({...p})); // Copy initial squad
             document.getElementById('currentTeam').textContent = `You are managing: ${gameState.playerTeam}`;
             showMainMenu();
         }
@@ -996,6 +1013,94 @@
 
             document.getElementById('seasonEndContent').innerHTML = content;
             showScreen('seasonEndScreen');
+        }
+
+        let currentTransferFilter = 'All';
+
+        function showTransfersScreen() {
+            currentTransferFilter = 'All';
+            displayTransferMarket();
+            showScreen('transfersScreen');
+        }
+
+        function filterTransfers(position) {
+            currentTransferFilter = position;
+            displayTransferMarket();
+        }
+
+        function displayTransferMarket() {
+            // Collect all players from all teams
+            const allPlayers = [];
+            for (let team in TEAMS) {
+                if (team !== gameState.playerTeam) { // Exclude your own team
+                    TEAMS[team].players.forEach(player => {
+                        allPlayers.push({
+                            ...player,
+                            team: team
+                        });
+                    });
+                }
+            }
+
+            // Filter by position
+            let filteredPlayers = allPlayers;
+            if (currentTransferFilter !== 'All') {
+                filteredPlayers = allPlayers.filter(p => p.position === currentTransferFilter);
+            }
+
+            // Sort by strength descending
+            filteredPlayers.sort((a, b) => b.strength - a.strength);
+
+            // Generate player cards
+            const playerCards = filteredPlayers.map(player => {
+                const canAfford = gameState.budget >= player.price;
+                const playerTeamName = player.team;
+                const btnColor = canAfford ? '#4caf50' : '#999';
+                const btnText = canAfford ? 'BUY' : 'NOT AFFORDABLE';
+
+                return `
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid ${canAfford ? '#4caf50' : '#ddd'}; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; margin-bottom: 5px;">${player.name}</div>
+                            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">
+                                <span style="background: #667eea; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-right: 5px;">${player.position}</span>
+                                <span>${playerTeamName}</span>
+                            </div>
+                            <div style="font-size: 0.85em;">
+                                ⭐ ${player.strength}/100 | £${player.price}M | £${player.wage}M/week
+                            </div>
+                        </div>
+                        <button onclick="buyPlayer('${player.name}', '${playerTeamName}', ${player.price})" style="background: ${btnColor}; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; font-weight: bold; margin-left: 20px;">${btnText}</button>
+                    </div>
+                `;
+            }).join('');
+
+            const content = `
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong>Your Budget:</strong> £${gameState.budget.toFixed(2)}M | <strong>Squad Size:</strong> ${gameState.squad.length}
+                </div>
+                ${playerCards}
+            `;
+
+            document.getElementById('transfersContent').innerHTML = content;
+        }
+
+        function buyPlayer(playerName, fromTeam, price) {
+            if (gameState.budget < price) {
+                alert('Not enough budget!');
+                return;
+            }
+
+            // Find the player
+            const player = TEAMS[fromTeam].players.find(p => p.name === playerName);
+            if (!player) return;
+
+            // Add to squad
+            gameState.squad.push({...player});
+            gameState.budget -= price;
+
+            alert(`✅ ${playerName} joined ${gameState.playerTeam}!\nNew Budget: £${gameState.budget.toFixed(2)}M`);
+            displayTransferMarket();
         }
 
         function showFinancesScreen() {
