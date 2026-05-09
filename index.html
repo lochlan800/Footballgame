@@ -726,15 +726,19 @@
 
         function renderTeamSelection() {
             const grid = document.getElementById('teamGrid');
-            grid.innerHTML = '';
+            let html = '';
+
             for (let team in TEAMS) {
                 const strength = TEAMS[team].strength;
-                const btn = document.createElement('button');
-                btn.className = 'team-btn';
-                btn.innerHTML = `<div style="font-weight: bold; margin-bottom: 5px;">${team}</div><div style="font-size: 0.9em; color: #667eea;">Strength: ${strength}/100</div>`;
-                btn.onclick = () => showTeamDetails(team);
-                grid.appendChild(btn);
+                html += `
+                    <button class="team-btn" onclick="showTeamDetails('${team}')">
+                        <div style="font-weight: bold; margin-bottom: 5px; font-size: 1em;">${team}</div>
+                        <div style="font-size: 0.9em; color: #667eea;">Strength: ${strength}/100</div>
+                    </button>
+                `;
             }
+
+            grid.innerHTML = html;
         }
 
         function showTeamDetails(team) {
