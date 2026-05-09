@@ -979,22 +979,22 @@
             // Generate offers from other teams
             const offers = generatePlayerOffers(player);
 
-            let offersHTML = '<h3 style="color: #667eea; margin-bottom: 15px;">Offers Received:</h3>';
-            offersHTML += offers.map((offer, idx) => {
+            let offersHTML = '<h3 style="color: #667eea; margin-bottom: 15px;">💰 Offers Received for ' + player.name + ':</h3>';
+            offersHTML += offers.map((offer) => {
                 const difference = offer.price - player.price;
-                const differenceText = difference > 0 ? `<span style="color: #4caf50;">+£${difference}M above market</span>` : `<span style="color: #f44336;">-£${Math.abs(difference)}M below market</span>`;
+                const differenceText = difference > 0 ? `<span style="color: #4caf50;">+£${difference.toFixed(1)}M above market</span>` : `<span style="color: #f44336;">-£${Math.abs(difference).toFixed(1)}M below market</span>`;
 
                 return `
-                    <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #667eea; margin-bottom: 12px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 8px;">${offer.team}</div>
-                                <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Bid: <span style="font-weight: bold; color: #4caf50; font-size: 1.1em;">£${offer.price}M</span></div>
-                                <div style="font-size: 0.8em;">${differenceText}</div>
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 3px solid #667eea; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <div style="font-weight: bold; font-size: 1.2em; margin-bottom: 8px; color: #667eea;">${offer.team}</div>
+                                <div style="font-size: 1.1em; color: #4caf50; margin-bottom: 5px;"><strong>Offers £${offer.price.toFixed(1)}M</strong></div>
+                                <div style="font-size: 0.85em;">${differenceText}</div>
                             </div>
-                            <div style="display: flex; gap: 8px;">
-                                <button onclick="acceptOffer(${playerIndex}, ${offer.price})" style="background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">✓ ACCEPT</button>
-                                <button onclick="rejectOffer()" style="background: #999; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">✗ REJECT</button>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button onclick="acceptOfferNow(${playerIndex}, ${offer.price}, '${offer.team}')" style="background: #4caf50; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.9em;">✓ YES</button>
+                                <button onclick="rejectOfferContinue()" style="background: #f44336; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.9em;">✗ NO</button>
                             </div>
                         </div>
                     </div>
@@ -1002,15 +1002,17 @@
             }).join('');
 
             const content = `
-                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
-                    <strong>${player.name}</strong> - Market Value: £${player.price}M<br>
-                    <span style="font-size: 0.9em; color: #666;">Multiple teams are interested in signing this player</span>
+                <div style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); padding: 20px; border-radius: 8px; margin-bottom: 20px; color: white;">
+                    <h2 style="margin: 0; font-size: 1.5em;">⚠️ TRANSFER OFFERS</h2>
+                    <p style="margin: 10px 0 0 0; font-size: 0.95em;">Multiple clubs want to sign <strong>${player.name}</strong>!</p>
+                    <p style="margin: 5px 0 0 0; font-size: 0.85em;">Market Value: £${player.price}M</p>
                 </div>
                 ${offersHTML}
-                <button onclick="showPlayerDetails(${playerIndex})" style="background: #999; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px;">← Back</button>
+                <button onclick="showPlayerDetails(${playerIndex})" style="background: #999; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px;">← Back to Player</button>
             `;
 
             document.getElementById('playerDetailsContent').innerHTML = content;
+            document.getElementById('playerDetailsTitle').textContent = 'Transfer Offers - ' + player.name;
         }
 
         function generatePlayerOffers(player) {
@@ -1042,16 +1044,16 @@
             return offers.sort((a, b) => b.price - a.price);
         }
 
-        function acceptOffer(playerIndex, offerPrice) {
+        function acceptOfferNow(playerIndex, offerPrice, teamName) {
             const player = gameState.squad[playerIndex];
             gameState.budget += offerPrice;
             gameState.squad.splice(playerIndex, 1);
-            alert(`✅ TRANSFER COMPLETE!\n\n${player.name} has been sold!\n\nSale Price: £${offerPrice}M\nNew Budget: £${gameState.budget.toFixed(2)}M`);
+            alert(`✅ TRANSFER COMPLETE!\n\n${teamName} has signed ${player.name}!\n\nTransfer Fee: £${offerPrice.toFixed(1)}M\nNew Budget: £${gameState.budget.toFixed(2)}M`);
             showSquadScreen();
         }
 
-        function rejectOffer() {
-            alert('Offer rejected. The player remains in your squad.');
+        function rejectOfferContinue() {
+            alert('❌ Offer rejected. Keep negotiating or try a different buyer in the Transfer Market.');
         }
 
         function showStandingsScreen() {
