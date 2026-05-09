@@ -317,11 +317,13 @@
             <!-- Main Menu Screen -->
             <div id="mainMenuScreen" class="screen">
                 <h2>Main Menu</h2>
-                <p id="currentTeam" style="font-size: 1.2em; margin-bottom: 20px; color: #667eea; font-weight: bold;"></p>
+                <p id="currentTeam" style="font-size: 1.2em; margin-bottom: 10px; color: #667eea; font-weight: bold;"></p>
+                <p id="budgetDisplay" style="font-size: 1.1em; margin-bottom: 20px; color: #4caf50; font-weight: bold;"></p>
                 <div class="menu">
                     <button class="menu-btn" onclick="showPlayMatchScreen()">Play a Match</button>
                     <button class="menu-btn" onclick="showStandingsScreen()">View Standings</button>
                     <button class="menu-btn" onclick="showStatsScreen()">View Team Stats</button>
+                    <button class="menu-btn" onclick="showFinancesScreen()">Stadium & Budget</button>
                     <button class="menu-btn" onclick="resetGame()">New Game</button>
                 </div>
             </div>
@@ -352,6 +354,13 @@
                 <div class="stats-grid" id="statsGrid"></div>
                 <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
             </div>
+
+            <!-- Finances Screen -->
+            <div id="financesScreen" class="screen">
+                <h2>Stadium & Budget</h2>
+                <div id="financesContent"></div>
+                <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
+            </div>
         </div>
     </div>
 
@@ -359,6 +368,8 @@
         const TEAMS = {
             "Manchester United": {
                 strength: 85,
+                stadium: { name: "Old Trafford", capacity: 73626, ticketPrice: 65 },
+                budget: 500,
                 players: [
                     { name: "De Gea", price: 15, wage: 0.35, strength: 78 },
                     { name: "Onana", price: 50, wage: 0.30, strength: 82 },
@@ -381,6 +392,8 @@
             },
             "Manchester City": {
                 strength: 90,
+                stadium: { name: "Etihad Stadium", capacity: 55097, ticketPrice: 75 },
+                budget: 550,
                 players: [
                     { name: "Ederson", price: 60, wage: 0.35, strength: 87 },
                     { name: "Ortega", price: 8, wage: 0.08, strength: 76 },
@@ -403,6 +416,8 @@
             },
             "Liverpool": {
                 strength: 88,
+                stadium: { name: "Anfield", capacity: 61000, ticketPrice: 70 },
+                budget: 520,
                 players: [
                     { name: "Alisson", price: 50, wage: 0.32, strength: 85 },
                     { name: "Kelleher", price: 15, wage: 0.12, strength: 76 },
@@ -425,6 +440,8 @@
             },
             "Chelsea": {
                 strength: 82,
+                stadium: { name: "Stamford Bridge", capacity: 60627, ticketPrice: 65 },
+                budget: 480,
                 players: [
                     { name: "Sanchez", price: 30, wage: 0.20, strength: 81 },
                     { name: "Petrovic", price: 22, wage: 0.14, strength: 77 },
@@ -447,6 +464,8 @@
             },
             "Arsenal": {
                 strength: 81,
+                stadium: { name: "Emirates Stadium", capacity: 60704, ticketPrice: 68 },
+                budget: 490,
                 players: [
                     { name: "Ramsdale", price: 35, wage: 0.22, strength: 82 },
                     { name: "Neto", price: 45, wage: 0.16, strength: 81 },
@@ -469,6 +488,8 @@
             },
             "Tottenham": {
                 strength: 79,
+                stadium: { name: "Tottenham Hotspur Stadium", capacity: 62850, ticketPrice: 62 },
+                budget: 450,
                 players: [
                     { name: "Vicario", price: 35, wage: 0.18, strength: 82 },
                     { name: "Forster", price: 5, wage: 0.08, strength: 72 },
@@ -491,6 +512,8 @@
             },
             "Brighton": {
                 strength: 76,
+                stadium: { name: "Amex Stadium", capacity: 31707, ticketPrice: 45 },
+                budget: 350,
                 players: [
                     { name: "Sanchez", price: 28, wage: 0.15, strength: 80 },
                     { name: "Steele", price: 8, wage: 0.07, strength: 71 },
@@ -513,6 +536,8 @@
             },
             "Newcastle": {
                 strength: 77,
+                stadium: { name: "St James' Park", capacity: 52305, ticketPrice: 55 },
+                budget: 420,
                 players: [
                     { name: "Pope", price: 30, wage: 0.18, strength: 82 },
                     { name: "Dubravka", price: 12, wage: 0.10, strength: 75 },
@@ -535,6 +560,8 @@
             },
             "Aston Villa": {
                 strength: 75,
+                stadium: { name: "Villa Park", capacity: 42682, ticketPrice: 50 },
+                budget: 400,
                 players: [
                     { name: "Martinez", price: 40, wage: 0.18, strength: 82 },
                     { name: "Esgaio", price: 15, wage: 0.09, strength: 72 },
@@ -557,6 +584,8 @@
             },
             "West Ham": {
                 strength: 72,
+                stadium: { name: "London Stadium", capacity: 62500, ticketPrice: 48 },
+                budget: 380,
                 players: [
                     { name: "Fabianski", price: 8, wage: 0.10, strength: 76 },
                     { name: "Areola", price: 15, wage: 0.12, strength: 77 },
@@ -581,7 +610,9 @@
 
         let gameState = {
             playerTeam: null,
-            teams: {}
+            teams: {},
+            budget: 0,
+            homeMatches: 0
         };
 
         function initGame() {
@@ -589,6 +620,7 @@
             for (let team in TEAMS) {
                 gameState.teams[team] = {
                     strength: TEAMS[team].strength,
+                    stadium: TEAMS[team].stadium,
                     wins: 0,
                     losses: 0,
                     draws: 0,
@@ -656,6 +688,7 @@
 
         function selectTeamFromDetails() {
             gameState.playerTeam = gameState.selectedTeam;
+            gameState.budget = TEAMS[gameState.playerTeam].budget;
             document.getElementById('currentTeam').textContent = `You are managing: ${gameState.playerTeam}`;
             showMainMenu();
         }
@@ -665,6 +698,7 @@
         }
 
         function showMainMenu() {
+            document.getElementById('budgetDisplay').textContent = `Budget: £${gameState.budget.toFixed(2)}M`;
             showScreen('mainMenuScreen');
         }
 
@@ -714,11 +748,23 @@
                 gameState.teams[opponent].points += 1;
             }
 
+            // Home match - earn ticket revenue
+            const stadium = gameState.teams[gameState.playerTeam].stadium;
+            const attendance = Math.floor(stadium.capacity * (0.7 + Math.random() * 0.3)); // 70-100% capacity
+            const ticketRevenue = (attendance * stadium.ticketPrice) / 1000000; // Convert to millions
+            gameState.budget += ticketRevenue;
+            gameState.homeMatches += 1;
+
             const content = document.getElementById('resultContent');
             content.innerHTML = `
                 <div class="match-result ${resultClass}">
                     <h3>${result}</h3>
                     <h2>${gameState.playerTeam} ${playerScore} - ${opponentScore} ${opponent}</h2>
+                    <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px;">
+                        <div style="margin-bottom: 10px;"><strong>Attendance:</strong> ${attendance.toLocaleString()} fans</div>
+                        <div style="color: #4caf50; font-weight: bold;">+£${ticketRevenue.toFixed(2)}M from ticket sales</div>
+                        <div style="margin-top: 10px; color: #667eea;"><strong>Budget: £${gameState.budget.toFixed(2)}M</strong></div>
+                    </div>
                 </div>
             `;
 
@@ -790,6 +836,40 @@
             initGame();
             renderTeamSelection();
             showScreen('teamSelectionScreen');
+        }
+
+        function showFinancesScreen() {
+            const stadium = gameState.teams[gameState.playerTeam].stadium;
+            const totalRevenue = (gameState.homeMatches * stadium.capacity * stadium.ticketPrice * 0.85) / 1000000;
+
+            const content = `
+                <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="margin-top: 0; color: #333;">🏟️ ${stadium.name}</h3>
+                    <div class="stat-card" style="display: inline-block; width: 48%; margin-right: 2%; vertical-align: top;">
+                        <div class="value">${stadium.capacity.toLocaleString()}</div>
+                        <div class="label">Capacity</div>
+                    </div>
+                    <div class="stat-card" style="display: inline-block; width: 48%; vertical-align: top;">
+                        <div class="value">£${stadium.ticketPrice}</div>
+                        <div class="label">Ticket Price</div>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #4caf50 0%, #45a049 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                    <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 10px;">Current Budget</div>
+                    <div style="font-size: 2.5em; font-weight: bold;">£${gameState.budget.toFixed(2)}M</div>
+                </div>
+
+                <div style="background: #f0f0f0; padding: 15px; border-radius: 8px;">
+                    <h4 style="margin-top: 0;">📊 Financial Summary</h4>
+                    <div style="margin-bottom: 10px;"><strong>Home Matches Played:</strong> ${gameState.homeMatches}</div>
+                    <div style="margin-bottom: 10px;"><strong>Total Revenue:</strong> £${totalRevenue.toFixed(2)}M</div>
+                    <div><strong>Average Attendance:</strong> ~${Math.round(stadium.capacity * 0.85).toLocaleString()} fans/match</div>
+                </div>
+            `;
+
+            document.getElementById('financesContent').innerHTML = content;
+            showScreen('financesScreen');
         }
 
         // Initialize on page load
