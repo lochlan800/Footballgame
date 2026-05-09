@@ -307,6 +307,36 @@
             display: block;
         }
 
+        .pitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #1a3a0a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .pitch-overlay svg {
+            width: 100%;
+            height: 100%;
+            max-height: 85vh;
+        }
+
+        .pitch-overlay-label {
+            color: white;
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-top: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
         @keyframes ballMove1 {
             0% { cx: 150; cy: 150; }
             50% { cx: 200; cy: 100; }
@@ -1046,8 +1076,8 @@
             const animationDuration = Math.max(2, totalGoals * 1.5);
 
             let animationHTML = `
-                <div class="pitch-container" style="text-align: center;">
-                    <svg class="pitch-svg" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto;">
+                <div class="pitch-overlay-label">${playerTeam} vs ${opponent}</div>
+                <svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:85vh;">
                         <!-- Pitch background -->
                         <rect width="1000" height="600" fill="#2d5016"/>
 
@@ -1122,10 +1152,7 @@
                         <!-- Ball -->
                         <circle id="animBall" cx="500" cy="300" r="16" fill="white" stroke="#333" stroke-width="2"/>
                     </svg>
-                </div>
-                <div id="goalDisplay" style="text-align: center; font-size: 1.1em; color: #667eea; font-weight: bold; min-height: 30px; margin: 10px 0;">
-                    ⚽ Match in progress...
-                </div>
+                    <div id="goalDisplay" class="pitch-overlay-label">⚽ Match in progress...</div>
             `;
 
             let animationCSS = '<style>';
@@ -1272,12 +1299,6 @@
 
             const content = document.getElementById('resultContent');
 
-            // Generate and show pitch animation first
-            const pitchAnimation = generatePitchAnimation(playerScore, opponentScore, gameState.playerTeam, opponent);
-            content.innerHTML = pitchAnimation.html;
-
-            showScreen('matchResultScreen');
-
             // Set season over flag when week 38 is reached
             if (gameState.week >= 38) {
                 gameState.seasonOver = true;
@@ -1286,8 +1307,21 @@
             // Generate results for other teams this week
             const otherTeamsResults = generateWeekResults();
 
-            // Show final score and other results after animation
+            // Show full-screen pitch animation overlay
+            const pitchAnimation = generatePitchAnimation(playerScore, opponentScore, gameState.playerTeam, opponent);
+            const overlay = document.createElement('div');
+            overlay.id = 'pitchOverlay';
+            overlay.className = 'pitch-overlay';
+            overlay.innerHTML = pitchAnimation.html;
+            document.body.appendChild(overlay);
+
+            showScreen('matchResultScreen');
+            content.innerHTML = '<div style="text-align:center; padding: 40px; color: #667eea; font-size: 1.2em;">⚽ Match in progress...</div>';
+
+            // Remove overlay and show final score after animation
             setTimeout(() => {
+                const overlayEl = document.getElementById('pitchOverlay');
+                if (overlayEl) overlayEl.remove();
                 const finalResultHTML = `
                     <div class="match-result ${resultClass}" style="margin-top: 30px;">
                         <h3>${result}</h3>
