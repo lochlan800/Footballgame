@@ -847,7 +847,7 @@
                 <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
             `;
 
-            document.getElementById('opponentGrid').parentElement.innerHTML = content;
+            document.getElementById('playMatchScreen').innerHTML = content;
             showScreen('playMatchScreen');
         }
 
@@ -969,6 +969,8 @@
             `;
 
             content.innerHTML += otherResultsHTML;
+
+            showScreen('matchResultScreen');
         }
 
         function showFixturesScreen() {
