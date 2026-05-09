@@ -260,8 +260,25 @@
             border-radius: 6px;
             border: 2px solid #667eea;
             text-align: center;
-            font-size: 0.95em;
+            font-size: 0.85em;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .player-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .player-price {
+            color: #4caf50;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .player-wage {
+            color: #ff9800;
+            font-size: 0.8em;
         }
 
         .team-strength {
@@ -342,43 +359,223 @@
         const TEAMS = {
             "Manchester United": {
                 strength: 85,
-                players: ["De Gea", "Onana", "Dalot", "Wan-Bissaka", "Shaw", "Varane", "De Ligt", "Maguire", "Casemiro", "Eriksen", "Mount", "Bruno Fernandes", "Rashford", "Sancho", "Antony", "Hojlund", "Martial"]
+                players: [
+                    { name: "De Gea", price: 15, wage: 0.35 },
+                    { name: "Onana", price: 50, wage: 0.30 },
+                    { name: "Dalot", price: 25, wage: 0.12 },
+                    { name: "Wan-Bissaka", price: 18, wage: 0.10 },
+                    { name: "Shaw", price: 22, wage: 0.18 },
+                    { name: "Varane", price: 12, wage: 0.15 },
+                    { name: "De Ligt", price: 45, wage: 0.20 },
+                    { name: "Maguire", price: 28, wage: 0.19 },
+                    { name: "Casemiro", price: 30, wage: 0.25 },
+                    { name: "Eriksen", price: 20, wage: 0.15 },
+                    { name: "Mount", price: 55, wage: 0.18 },
+                    { name: "Bruno Fernandes", price: 75, wage: 0.35 },
+                    { name: "Rashford", price: 80, wage: 0.32 },
+                    { name: "Sancho", price: 35, wage: 0.18 },
+                    { name: "Antony", price: 65, wage: 0.22 },
+                    { name: "Hojlund", price: 72, wage: 0.15 },
+                    { name: "Martial", price: 5, wage: 0.12 }
+                ]
             },
             "Manchester City": {
                 strength: 90,
-                players: ["Ederson", "Ortega", "Walker", "Akanji", "Dias", "Gvardiol", "Ake", "Rodri", "Phillips", "De Bruyne", "Foden", "Alvarez", "Haaland", "Grealish", "Mahrez", "Nunes", "Stones"]
+                players: [
+                    { name: "Ederson", price: 60, wage: 0.35 },
+                    { name: "Ortega", price: 8, wage: 0.08 },
+                    { name: "Walker", price: 35, wage: 0.28 },
+                    { name: "Akanji", price: 42, wage: 0.22 },
+                    { name: "Dias", price: 48, wage: 0.26 },
+                    { name: "Gvardiol", price: 90, wage: 0.18 },
+                    { name: "Ake", price: 35, wage: 0.19 },
+                    { name: "Rodri", price: 120, wage: 0.38 },
+                    { name: "Phillips", price: 48, wage: 0.16 },
+                    { name: "De Bruyne", price: 85, wage: 0.40 },
+                    { name: "Foden", price: 95, wage: 0.32 },
+                    { name: "Alvarez", price: 75, wage: 0.22 },
+                    { name: "Haaland", price: 180, wage: 0.45 },
+                    { name: "Grealish", price: 100, wage: 0.30 },
+                    { name: "Mahrez", price: 25, wage: 0.18 },
+                    { name: "Nunes", price: 62, wage: 0.16 },
+                    { name: "Stones", price: 40, wage: 0.20 }
+                ]
             },
             "Liverpool": {
                 strength: 88,
-                players: ["Alisson", "Kelleher", "Alexander-Arnold", "Van Dijk", "Konate", "Gomez", "Robertson", "Salah", "Henderson", "Thiago", "Jones", "Gravenberch", "Nunez", "Jota", "Diaz", "Gakpo", "Elliott"]
+                players: [
+                    { name: "Alisson", price: 50, wage: 0.32 },
+                    { name: "Kelleher", price: 15, wage: 0.12 },
+                    { name: "Alexander-Arnold", price: 70, wage: 0.28 },
+                    { name: "Van Dijk", price: 60, wage: 0.32 },
+                    { name: "Konate", price: 40, wage: 0.20 },
+                    { name: "Gomez", price: 12, wage: 0.10 },
+                    { name: "Robertson", price: 50, wage: 0.28 },
+                    { name: "Salah", price: 85, wage: 0.40 },
+                    { name: "Henderson", price: 30, wage: 0.18 },
+                    { name: "Thiago", price: 25, wage: 0.15 },
+                    { name: "Jones", price: 15, wage: 0.08 },
+                    { name: "Gravenberch", price: 45, wage: 0.16 },
+                    { name: "Nunez", price: 85, wage: 0.30 },
+                    { name: "Jota", price: 50, wage: 0.22 },
+                    { name: "Diaz", price: 75, wage: 0.28 },
+                    { name: "Gakpo", price: 45, wage: 0.18 },
+                    { name: "Elliott", price: 20, wage: 0.12 }
+                ]
             },
             "Chelsea": {
                 strength: 82,
-                players: ["Sanchez", "Petrovic", "Reece James", "Gusto", "Colwill", "Adarabioyo", "Fofana", "Caicedo", "Fernandez", "Enzo", "Palmer", "Conor Gallagher", "Madueke", "Neto", "Jackson", "Disasi", "Mudryk"]
+                players: [
+                    { name: "Sanchez", price: 30, wage: 0.20 },
+                    { name: "Petrovic", price: 22, wage: 0.14 },
+                    { name: "Reece James", price: 55, wage: 0.24 },
+                    { name: "Gusto", price: 35, wage: 0.12 },
+                    { name: "Colwill", price: 40, wage: 0.16 },
+                    { name: "Adarabioyo", price: 25, wage: 0.12 },
+                    { name: "Fofana", price: 80, wage: 0.22 },
+                    { name: "Caicedo", price: 115, wage: 0.30 },
+                    { name: "Fernandez", price: 68, wage: 0.26 },
+                    { name: "Enzo", price: 48, wage: 0.18 },
+                    { name: "Palmer", price: 105, wage: 0.28 },
+                    { name: "Conor Gallagher", price: 40, wage: 0.18 },
+                    { name: "Madueke", price: 50, wage: 0.20 },
+                    { name: "Neto", price: 70, wage: 0.22 },
+                    { name: "Jackson", price: 55, wage: 0.20 },
+                    { name: "Disasi", price: 32, wage: 0.14 },
+                    { name: "Mudryk", price: 90, wage: 0.18 }
+                ]
             },
             "Arsenal": {
                 strength: 81,
-                players: ["Ramsdale", "Neto", "Timber", "Saliba", "White", "Koscielny", "Partey", "Odegaard", "Saka", "Martinelli", "Havertz", "Trossard", "Nkunku", "Jesus", "Zinchenko", "Tomiyasu", "Calafiori"]
+                players: [
+                    { name: "Ramsdale", price: 35, wage: 0.22 },
+                    { name: "Neto", price: 45, wage: 0.16 },
+                    { name: "Timber", price: 50, wage: 0.18 },
+                    { name: "Saliba", price: 65, wage: 0.24 },
+                    { name: "White", price: 55, wage: 0.22 },
+                    { name: "Koscielny", price: 12, wage: 0.08 },
+                    { name: "Partey", price: 42, wage: 0.22 },
+                    { name: "Odegaard", price: 85, wage: 0.28 },
+                    { name: "Saka", price: 90, wage: 0.30 },
+                    { name: "Martinelli", price: 70, wage: 0.24 },
+                    { name: "Havertz", price: 75, wage: 0.26 },
+                    { name: "Trossard", price: 35, wage: 0.18 },
+                    { name: "Nkunku", price: 60, wage: 0.20 },
+                    { name: "Jesus", price: 45, wage: 0.18 },
+                    { name: "Zinchenko", price: 35, wage: 0.18 },
+                    { name: "Tomiyasu", price: 18, wage: 0.12 },
+                    { name: "Calafiori", price: 28, wage: 0.10 }
+                ]
             },
             "Tottenham": {
                 strength: 79,
-                players: ["Vicario", "Forster", "Porro", "Van de Ven", "Romero", "Tanganga", "Sarr", "Bissouma", "Sarr", "Madison", "Son", "Richarlison", "Maddison", "Solanke", "Kulusevski", "Lenglet", "Gray"]
+                players: [
+                    { name: "Vicario", price: 35, wage: 0.18 },
+                    { name: "Forster", price: 5, wage: 0.08 },
+                    { name: "Porro", price: 45, wage: 0.16 },
+                    { name: "Van de Ven", price: 50, wage: 0.18 },
+                    { name: "Romero", price: 55, wage: 0.22 },
+                    { name: "Tanganga", price: 12, wage: 0.10 },
+                    { name: "Sarr", price: 18, wage: 0.10 },
+                    { name: "Bissouma", price: 40, wage: 0.16 },
+                    { name: "Sarr", price: 35, wage: 0.14 },
+                    { name: "Madison", price: 60, wage: 0.20 },
+                    { name: "Son", price: 80, wage: 0.28 },
+                    { name: "Richarlison", price: 50, wage: 0.20 },
+                    { name: "Maddison", price: 48, wage: 0.18 },
+                    { name: "Solanke", price: 65, wage: 0.22 },
+                    { name: "Kulusevski", price: 55, wage: 0.20 },
+                    { name: "Lenglet", price: 12, wage: 0.10 },
+                    { name: "Gray", price: 15, wage: 0.09 }
+                ]
             },
             "Brighton": {
                 strength: 76,
-                players: ["Sanchez", "Steele", "Veltman", "Dunk", "Van Hecke", "Estupinan", "Lamptey", "Baleba", "Ayling", "Groß", "Moder", "Mac Allister", "Tadic", "Buonanotte", "Welbeck", "Enciso", "Ferguson"]
+                players: [
+                    { name: "Sanchez", price: 28, wage: 0.15 },
+                    { name: "Steele", price: 8, wage: 0.07 },
+                    { name: "Veltman", price: 15, wage: 0.10 },
+                    { name: "Dunk", price: 25, wage: 0.14 },
+                    { name: "Van Hecke", price: 20, wage: 0.10 },
+                    { name: "Estupinan", price: 30, wage: 0.12 },
+                    { name: "Lamptey", price: 25, wage: 0.12 },
+                    { name: "Baleba", price: 35, wage: 0.14 },
+                    { name: "Ayling", price: 10, wage: 0.08 },
+                    { name: "Groß", price: 20, wage: 0.11 },
+                    { name: "Moder", price: 22, wage: 0.10 },
+                    { name: "Mac Allister", price: 40, wage: 0.13 },
+                    { name: "Tadic", price: 5, wage: 0.06 },
+                    { name: "Buonanotte", price: 25, wage: 0.09 },
+                    { name: "Welbeck", price: 8, wage: 0.08 },
+                    { name: "Enciso", price: 32, wage: 0.11 },
+                    { name: "Ferguson", price: 18, wage: 0.09 }
+                ]
             },
             "Newcastle": {
                 strength: 77,
-                players: ["Pope", "Dubravka", "Trippier", "Schar", "Botman", "Burn", "Hall", "Guimaraes", "Joelinton", "Tonali", "Barnes", "Longstaff", "Isak", "Wilson", "Saint-Maximin", "Almiron", "Gordon"]
+                players: [
+                    { name: "Pope", price: 30, wage: 0.18 },
+                    { name: "Dubravka", price: 12, wage: 0.10 },
+                    { name: "Trippier", price: 20, wage: 0.15 },
+                    { name: "Schar", price: 18, wage: 0.12 },
+                    { name: "Botman", price: 45, wage: 0.16 },
+                    { name: "Burn", price: 35, wage: 0.14 },
+                    { name: "Hall", price: 32, wage: 0.12 },
+                    { name: "Guimaraes", price: 75, wage: 0.24 },
+                    { name: "Joelinton", price: 40, wage: 0.16 },
+                    { name: "Tonali", price: 68, wage: 0.20 },
+                    { name: "Barnes", price: 45, wage: 0.14 },
+                    { name: "Longstaff", price: 28, wage: 0.12 },
+                    { name: "Isak", price: 85, wage: 0.28 },
+                    { name: "Wilson", price: 12, wage: 0.10 },
+                    { name: "Saint-Maximin", price: 35, wage: 0.14 },
+                    { name: "Almiron", price: 42, wage: 0.15 },
+                    { name: "Gordon", price: 55, wage: 0.18 }
+                ]
             },
             "Aston Villa": {
                 strength: 75,
-                players: ["Martinez", "Esgaio", "Konsa", "Mina", "Moreno", "Cash", "Douglas Luiz", "McGinn", "Kamara", "Buendia", "Bailey", "Watkins", "Feghouli", "Dendoncker", "Ramsey", "Philogene", "Borjan"]
+                players: [
+                    { name: "Martinez", price: 40, wage: 0.18 },
+                    { name: "Esgaio", price: 15, wage: 0.09 },
+                    { name: "Konsa", price: 32, wage: 0.14 },
+                    { name: "Mina", price: 28, wage: 0.12 },
+                    { name: "Moreno", price: 35, wage: 0.14 },
+                    { name: "Cash", price: 30, wage: 0.13 },
+                    { name: "Douglas Luiz", price: 60, wage: 0.18 },
+                    { name: "McGinn", price: 45, wage: 0.16 },
+                    { name: "Kamara", price: 38, wage: 0.14 },
+                    { name: "Buendia", price: 32, wage: 0.12 },
+                    { name: "Bailey", price: 25, wage: 0.11 },
+                    { name: "Watkins", price: 70, wage: 0.22 },
+                    { name: "Feghouli", price: 8, wage: 0.07 },
+                    { name: "Dendoncker", price: 15, wage: 0.10 },
+                    { name: "Ramsey", price: 12, wage: 0.09 },
+                    { name: "Philogene", price: 22, wage: 0.10 },
+                    { name: "Borjan", price: 5, wage: 0.06 }
+                ]
             },
             "West Ham": {
                 strength: 72,
-                players: ["Fabianski", "Areola", "Cresswell", "Coufal", "Mavropanos", "Aguerd", "Alvarez", "Soucek", "Paqueta", "Kudus", "Bowen", "Antonio", "Scarles", "Ings", "Lanzini", "Kilman", "Fornals"]
+                players: [
+                    { name: "Fabianski", price: 8, wage: 0.10 },
+                    { name: "Areola", price: 15, wage: 0.12 },
+                    { name: "Cresswell", price: 12, wage: 0.10 },
+                    { name: "Coufal", price: 14, wage: 0.09 },
+                    { name: "Mavropanos", price: 18, wage: 0.10 },
+                    { name: "Aguerd", price: 32, wage: 0.12 },
+                    { name: "Alvarez", price: 25, wage: 0.11 },
+                    { name: "Soucek", price: 40, wage: 0.15 },
+                    { name: "Paqueta", price: 50, wage: 0.16 },
+                    { name: "Kudus", price: 45, wage: 0.14 },
+                    { name: "Bowen", price: 50, wage: 0.18 },
+                    { name: "Antonio", price: 12, wage: 0.11 },
+                    { name: "Scarles", price: 8, wage: 0.06 },
+                    { name: "Ings", price: 5, wage: 0.08 },
+                    { name: "Lanzini", price: 8, wage: 0.08 },
+                    { name: "Kilman", price: 22, wage: 0.10 },
+                    { name: "Fornals", price: 18, wage: 0.11 }
+                ]
             }
         };
 
@@ -422,13 +619,26 @@
             document.getElementById('teamDetailsName').textContent = team;
 
             const teamData = TEAMS[team];
+            const totalPrice = teamData.players.reduce((sum, p) => sum + p.price, 0);
+            const totalWage = teamData.players.reduce((sum, p) => sum + p.wage, 0).toFixed(2);
+
             const playersHtml = teamData.players
-                .map(player => `<div class="player-card">${player}</div>`)
+                .map(player => `
+                    <div class="player-card">
+                        <div class="player-name">${player.name}</div>
+                        <div class="player-price">£${player.price}M</div>
+                        <div class="player-wage">£${player.wage}M/week</div>
+                    </div>
+                `)
                 .join('');
 
             const content = `
                 <div class="team-strength">
                     Team Strength: ${teamData.strength}/100
+                </div>
+                <div style="background: #f0f0f0; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center;">
+                    <div style="margin-bottom: 10px;"><strong>Squad Value:</strong> £${totalPrice}M</div>
+                    <div><strong>Weekly Wages:</strong> £${totalWage}M</div>
                 </div>
                 <div class="players-list">
                     <h3>Squad (${teamData.players.length} players)</h3>
