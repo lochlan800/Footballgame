@@ -1151,6 +1151,13 @@
 
                         <!-- Ball -->
                         <circle id="animBall" cx="500" cy="300" r="16" fill="white" stroke="#333" stroke-width="2"/>
+
+                        <!-- Commentary text -->
+                        <g id="commentaryGroup">
+                            <text id="commentaryText" x="500" y="100" text-anchor="middle" font-size="48" font-weight="bold" fill="white" opacity="0" text-shadow="0 2px 4px rgba(0,0,0,0.8)">
+                                🎯
+                            </text>
+                        </g>
                     </svg>
                     <div id="goalDisplay" class="pitch-overlay-label">⚽ Match in progress...</div>
             `;
@@ -1163,23 +1170,37 @@
                         0%, 100% { cx: 500; cy: 300; }
                         50% { cx: 500; cy: 300; }
                     }
+                    @keyframes commentaryFade {
+                        0% { opacity: 0; }
+                        10% { opacity: 1; }
+                        90% { opacity: 1; }
+                        100% { opacity: 0; }
+                    }
                     #animBall {
                         animation: ballMovePossession 2s ease-in-out infinite;
+                    }
+                    #commentaryText {
+                        animation: commentaryFade 2s ease-in-out infinite;
+                        font-size: 52px;
                     }
                 `;
             } else {
                 let currentTime = 0;
                 let animationSequence = '';
+                let commentarySequence = '';
 
                 for (let i = 0; i < goalSequence.length; i++) {
                     const isPlayerGoal = goalSequence[i] === 'player';
+                    const teamName = isPlayerGoal ? playerTeam : opponent;
                     const startX = 500;
                     const startY = 300;
                     const endX = isPlayerGoal ? 1020 : -20;
 
                     const keyframeName = `ballMove${i}`;
                     const moveDuration = 1.5;
+                    const commentaryName = `commentary${i}`;
 
+                    // Ball movement keyframes
                     animationCSS += `
                         @keyframes ${keyframeName} {
                             0% { cx: ${startX}; cy: ${startY}; }
@@ -1187,15 +1208,33 @@
                         }
                     `;
 
+                    // Commentary keyframes - show "GOAL!" at the end
+                    const commentaryStart = currentTime + moveDuration - 0.5;
+                    const commentaryEnd = commentaryStart + 1.2;
+                    animationCSS += `
+                        @keyframes ${commentaryName} {
+                            0% { opacity: 0; font-size: 48px; }
+                            5% { opacity: 1; font-size: 72px; }
+                            80% { opacity: 1; font-size: 72px; }
+                            100% { opacity: 0; font-size: 48px; }
+                        }
+                    `;
+
                     animationSequence += `${keyframeName} ${moveDuration}s linear ${currentTime}s,`;
+                    commentarySequence += `${commentaryName} ${commentaryEnd - commentaryStart}s ease-out ${commentaryStart}s,`;
+
                     currentTime += moveDuration + 1;
                 }
 
                 animationSequence = animationSequence.slice(0, -1);
+                commentarySequence = commentarySequence.slice(0, -1);
                 animationCSS += `
                     #animBall {
                         animation: ${animationSequence};
                         animation-fill-mode: forwards;
+                    }
+                    #commentaryText {
+                        animation: ${commentarySequence};
                     }
                 `;
             }
@@ -1317,6 +1356,25 @@
 
             showScreen('matchResultScreen');
             content.innerHTML = '<div style="text-align:center; padding: 40px; color: #667eea; font-size: 1.2em;">⚽ Match in progress...</div>';
+
+            // Update commentary text during animation
+            let commentTime = 0;
+            const updateCommentary = () => {
+                const goalSequence = pitchAnimation.goalSequence;
+                if (goalSequence && goalSequence.length > 0) {
+                    for (let i = 0; i < goalSequence.length; i++) {
+                        const scoreTeam = goalSequence[i] === 'player' ? gameState.playerTeam : opponent;
+                        const timingStart = i * 2.5 + 1; // Start showing text just before goal
+                        const timingEnd = timingStart + 1.2;
+
+                        setTimeout(() => {
+                            const text = document.getElementById('commentaryText');
+                            if (text) text.textContent = '⚽ GOAL!';
+                        }, timingStart * 1000);
+                    }
+                }
+            };
+            updateCommentary();
 
             // Remove overlay and show final score after animation
             setTimeout(() => {
