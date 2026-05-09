@@ -606,9 +606,10 @@
             const grid = document.getElementById('teamGrid');
             grid.innerHTML = '';
             for (let team in TEAMS) {
+                const strength = TEAMS[team].strength;
                 const btn = document.createElement('button');
                 btn.className = 'team-btn';
-                btn.textContent = team;
+                btn.innerHTML = `<div style="font-weight: bold; margin-bottom: 5px;">${team}</div><div style="font-size: 0.9em; color: #667eea;">Strength: ${strength}/100</div>`;
                 btn.onclick = () => showTeamDetails(team);
                 grid.appendChild(btn);
             }
