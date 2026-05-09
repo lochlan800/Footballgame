@@ -1318,15 +1318,69 @@
             showScreen('matchResultScreen');
             content.innerHTML = '<div style="text-align:center; padding: 40px; color: #667eea; font-size: 1.2em;">⚽ Match in progress...</div>';
 
-            // JavaScript-driven ball animation
+            // JavaScript-driven ball animation with synchronized commentary
             const animateBall = () => {
                 const ball = overlay.querySelector('#animBall');
+                const log = overlay.querySelector('#commentaryLog');
                 if (!ball) return;
+
+                const playerTeamName = gameState.playerTeam;
+                const opponentName = opponent;
 
                 const goalEvents = (pitchAnimation.goalTimes || []).map((minute, i) => ({
                     time: minute * pitchAnimation.secondsPerMinute * 1000,
                     team: pitchAnimation.goalSequence[i]
                 }));
+
+                // Commentary phrase pools
+                const idleActions = {
+                    midfield: [
+                        '{team} works the ball in midfield',
+                        '{team} keeps possession',
+                        '{team} switches the play',
+                        '{team} passes it around',
+                        'Good build-up from {team}'
+                    ],
+                    leftSide: [
+                        '{team} pushes down the left',
+                        '{team} attacks down the left wing',
+                        'Cross coming in from the left by {team}',
+                        '{team} works it down the left flank'
+                    ],
+                    rightSide: [
+                        '{team} pushes down the right',
+                        '{team} attacks down the right wing',
+                        'Cross coming in from the right by {team}',
+                        '{team} works it down the right flank'
+                    ]
+                };
+                const interceptions = [
+                    'Intercepted by {team}!',
+                    'Tackled by {team}!',
+                    '{team} wins the ball back!',
+                    'Cleared by {team}!'
+                ];
+                const attackBuildup = [
+                    '{team} launches an attack!',
+                    '{team} surges forward!',
+                    '{team} breaks through!',
+                    '{team} into the final third...'
+                ];
+                const shots = [
+                    '{team} shoots!',
+                    '{team} takes aim!',
+                    'Shot from {team}!',
+                    '{team} strikes!'
+                ];
+                const goalShouts = [
+                    '⚽ GOAL FOR {team}!',
+                    '⚽ {team} SCORES!!',
+                    '⚽ IT\'S IN! GOAL FOR {team}!',
+                    '⚽ {team} FINDS THE NET!'
+                ];
+
+                const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+                const fill = (template, team) => template.replace('{team}', team);
 
                 const animStartTime = Date.now();
                 let nextGoalIndex = 0;
@@ -1336,8 +1390,22 @@
                 let resetting = false;
                 let resetStart = 0;
 
+                // Commentary state
+                let lastCommentaryUpdate = 0;
+                let possessionTeam = Math.random() < 0.5 ? playerTeamName : opponentName;
+                let attackPhraseShown = false;
+                let shotPhraseShown = false;
+                let goalPhraseShown = false;
+                let kickoffShown = false;
+
+                const setCommentary = (text) => {
+                    if (log) log.textContent = text;
+                };
+
+                setCommentary("⚽ Kickoff! The match begins.");
+
                 const frame = () => {
-                    if (!document.getElementById('pitchOverlay')) return; // Stop if overlay removed
+                    if (!document.getElementById('pitchOverlay')) return;
                     const elapsed = Date.now() - animStartTime;
                     if (elapsed > 185000) return;
 
@@ -1347,22 +1415,36 @@
                         inGoalAnimation = true;
                         goalAnimStart = elapsed;
                         goalDirection = goalEvents[nextGoalIndex].team === 'player' ? 1 : -1;
+                        possessionTeam = goalDirection > 0 ? playerTeamName : opponentName;
+                        attackPhraseShown = false;
+                        shotPhraseShown = false;
+                        goalPhraseShown = false;
+                        // Phase 1: attack builds up
+                        setCommentary(fill(pick(attackBuildup), possessionTeam));
                     }
 
                     if (inGoalAnimation) {
-                        // Animate ball moving toward goal over 1.5 seconds
                         const goalProgress = Math.min(1, (elapsed - goalAnimStart) / 1500);
                         const targetX = goalDirection > 0 ? 1020 : -20;
                         const newX = 500 + (targetX - 500) * goalProgress;
                         ball.setAttribute('cx', newX);
+                        ball.setAttribute('cy', 300);
 
-                        // Trigger goal flash text
-                        if (goalProgress > 0.7) {
+                        // Phase 2: shot
+                        if (goalProgress > 0.4 && !shotPhraseShown) {
+                            shotPhraseShown = true;
+                            setCommentary(fill(pick(shots), possessionTeam));
+                        }
+
+                        // Phase 3: GOAL!
+                        if (goalProgress > 0.85 && !goalPhraseShown) {
+                            goalPhraseShown = true;
+                            setCommentary(fill(pick(goalShouts), possessionTeam.toUpperCase()));
                             const text = overlay.querySelector('#commentaryText');
-                            if (text && text.textContent !== '⚽ GOAL!') {
+                            if (text) {
                                 text.textContent = '⚽ GOAL!';
                                 text.classList.remove('goal-flash');
-                                void text.offsetWidth; // Force reflow to restart animation
+                                void text.offsetWidth;
                                 text.classList.add('goal-flash');
                             }
                         }
@@ -1372,24 +1454,54 @@
                             nextGoalIndex++;
                             resetting = true;
                             resetStart = elapsed;
+                            kickoffShown = false;
                         }
                     } else if (resetting) {
-                        // Quick reset back to center over 0.5s
-                        const resetProgress = Math.min(1, (elapsed - resetStart) / 500);
+                        const resetProgress = Math.min(1, (elapsed - resetStart) / 800);
                         const currentX = parseFloat(ball.getAttribute('cx'));
-                        const newX = currentX + (500 - currentX) * 0.2; // Smooth interpolation
+                        const newX = currentX + (500 - currentX) * 0.15;
                         ball.setAttribute('cx', newX);
+                        ball.setAttribute('cy', 300);
+
+                        // Show kickoff commentary briefly after a goal
+                        if (!kickoffShown && resetProgress > 0.3) {
+                            kickoffShown = true;
+                            setCommentary("Kickoff. Match resumes.");
+                        }
+
                         if (resetProgress >= 1) {
                             resetting = false;
                             ball.setAttribute('cx', 500);
+                            lastCommentaryUpdate = elapsed; // Wait a moment before next commentary
                         }
                     } else {
-                        // Idle: gentle back-and-forth showing midfield possession
+                        // Idle: ball swings around showing possession
                         const swingX = 500 + Math.sin(elapsed / 700) * 250;
                         ball.setAttribute('cx', swingX);
-                        // Add slight vertical bob
                         const bobY = 300 + Math.cos(elapsed / 500) * 40;
                         ball.setAttribute('cy', bobY);
+
+                        // Update idle commentary every 2.5 seconds based on ball position
+                        if (elapsed - lastCommentaryUpdate > 2500) {
+                            lastCommentaryUpdate = elapsed;
+
+                            // 30% chance of switching possession (interception)
+                            if (Math.random() < 0.3) {
+                                possessionTeam = possessionTeam === playerTeamName ? opponentName : playerTeamName;
+                                setCommentary(fill(pick(interceptions), possessionTeam));
+                            } else {
+                                // Pick commentary based on ball's current position
+                                let zonePool;
+                                if (swingX < 400) {
+                                    zonePool = idleActions.leftSide;
+                                } else if (swingX > 600) {
+                                    zonePool = idleActions.rightSide;
+                                } else {
+                                    zonePool = idleActions.midfield;
+                                }
+                                setCommentary(fill(pick(zonePool), possessionTeam));
+                            }
+                        }
                     }
 
                     requestAnimationFrame(frame);
@@ -1417,48 +1529,8 @@
             };
             updateMatchClock();
 
-            // Generate detailed play-by-play commentary spread throughout the match
-            const updateCommentary = () => {
-                const goalSequence = pitchAnimation.goalSequence;
-                const log = document.getElementById('commentaryLog');
-                const secondsPerMinute = 2;
-
-                const commentaryActions = [
-                    'plays the ball forward', 'passes to the wing', 'crosses into the box',
-                    'shoots at goal', 'takes a long-range shot', 'cuts inside and shoots',
-                    'makes a great pass', 'dribbles forward', 'crosses from the right'
-                ];
-                const interceptions = [
-                    'Intercepted! ', 'Loose ball! ', 'Blocked by the defense! ', 'Cleared! ', 'Tackles and wins! '
-                ];
-                const saves = [
-                    'Brilliant save from the goalkeeper!', 'Excellent shot-stopping!',
-                    'Saved with a diving header!', 'Great reflexes from the keeper!', 'Parried away safely!'
-                ];
-
-                // Generate periodic match events throughout 90 minutes
-                const eventInterval = setInterval(() => {
-                    if (!log) return;
-                    const elapsed = 0; // This will be updated per interval
-                    log.textContent = `${commentaryActions[Math.floor(Math.random() * commentaryActions.length)]}`;
-                }, 3000);
-
-                // Schedule goals with commentary
-                if (goalSequence && goalSequence.length > 0) {
-                    goalSequence.forEach((scorer, i) => {
-                        const goalMinute = pitchAnimation.goalTimes[i];
-                        const goalTimeInMs = goalMinute * secondsPerMinute * 1000;
-                        const isPlayerGoal = scorer === 'player';
-                        const attackingTeam = isPlayerGoal ? gameState.playerTeam : opponent;
-                        const defendingTeam = isPlayerGoal ? opponent : gameState.playerTeam;
-
-                        setTimeout(() => {
-                            if (log) log.textContent = `⚽ GOAL FOR ${attackingTeam.toUpperCase()}!`;
-                        }, goalTimeInMs);
-                    });
-                }
-            };
-            updateCommentary();
+            // Commentary is now driven by the animateBall loop below, so it
+            // stays perfectly in sync with the ball's position and phase.
 
             // Remove overlay and show final score after animation
             setTimeout(() => {
