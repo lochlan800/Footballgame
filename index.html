@@ -317,7 +317,8 @@
             <!-- Main Menu Screen -->
             <div id="mainMenuScreen" class="screen">
                 <h2>Main Menu</h2>
-                <p id="currentTeam" style="font-size: 1.2em; margin-bottom: 10px; color: #667eea; font-weight: bold;"></p>
+                <p id="currentTeam" style="font-size: 1.2em; margin-bottom: 5px; color: #667eea; font-weight: bold;"></p>
+                <p id="weekDisplay" style="font-size: 1em; margin-bottom: 10px; color: #999;">Week 0/38</p>
                 <p id="budgetDisplay" style="font-size: 1.1em; margin-bottom: 20px; color: #4caf50; font-weight: bold;"></p>
                 <div class="menu">
                     <button class="menu-btn" onclick="showPlayMatchScreen()">Play a Match</button>
@@ -360,6 +361,12 @@
                 <h2>Stadium & Budget</h2>
                 <div id="financesContent"></div>
                 <button class="back-btn" onclick="showMainMenu()">Back to Menu</button>
+            </div>
+
+            <!-- Season End Screen -->
+            <div id="seasonEndScreen" class="screen">
+                <div id="seasonEndContent"></div>
+                <button class="menu-btn" onclick="resetGame()" style="margin-top: 20px;">Start New Season</button>
             </div>
         </div>
     </div>
@@ -612,7 +619,9 @@
             playerTeam: null,
             teams: {},
             budget: 0,
-            homeMatches: 0
+            homeMatches: 0,
+            week: 0,
+            seasonOver: false
         };
 
         function initGame() {
@@ -698,6 +707,11 @@
         }
 
         function showMainMenu() {
+            if (gameState.seasonOver) {
+                showSeasonEnd();
+                return;
+            }
+            document.getElementById('weekDisplay').textContent = `Week ${gameState.week}/38`;
             document.getElementById('budgetDisplay').textContent = `Budget: £${gameState.budget.toFixed(2)}M`;
             showScreen('mainMenuScreen');
         }
@@ -718,6 +732,12 @@
         }
 
         function playMatch(opponent) {
+            // Check if season is over
+            if (gameState.week >= 38) {
+                alert('Season is over! Go to main menu to see final results.');
+                return;
+            }
+
             const playerStrength = gameState.teams[gameState.playerTeam].strength;
             const opponentStrength = gameState.teams[opponent].strength;
 
@@ -748,6 +768,9 @@
                 gameState.teams[opponent].points += 1;
             }
 
+            // Increment week
+            gameState.week += 1;
+
             // Calculate total weekly wages
             const teamPlayers = TEAMS[gameState.playerTeam].players;
             const weeklyWages = teamPlayers.reduce((sum, p) => sum + p.wage, 0);
@@ -761,10 +784,14 @@
             gameState.budget += ticketRevenue;
             gameState.homeMatches += 1;
 
+            // Check if season is over
+            const seasonOverMsg = gameState.week >= 38 ? '<div style="color: #ff9800; font-weight: bold; margin-top: 15px; font-size: 1.1em;">🏁 SEASON COMPLETE! Go to main menu for final results.</div>' : '';
+
             const content = document.getElementById('resultContent');
             content.innerHTML = `
                 <div class="match-result ${resultClass}">
                     <h3>${result}</h3>
+                    <h2>Week ${gameState.week}/38</h2>
                     <h2>${gameState.playerTeam} ${playerScore} - ${opponentScore} ${opponent}</h2>
                     <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px;">
                         <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #ddd;">
@@ -775,9 +802,15 @@
                             <div style="margin-bottom: 10px; color: #f44336; font-weight: bold;">-£${weeklyWages.toFixed(2)}M weekly wages</div>
                             <div style="color: #667eea; font-weight: bold; font-size: 1.1em;">Budget: £${gameState.budget.toFixed(2)}M</div>
                         </div>
+                        ${seasonOverMsg}
                     </div>
                 </div>
             `;
+
+            // Set season over flag when week 38 is reached
+            if (gameState.week >= 38) {
+                gameState.seasonOver = true;
+            }
 
             showScreen('matchResultScreen');
         }
@@ -844,9 +877,86 @@
         }
 
         function resetGame() {
+            gameState.week = 0;
+            gameState.seasonOver = false;
+            gameState.homeMatches = 0;
+            gameState.budget = 0;
             initGame();
             renderTeamSelection();
             showScreen('teamSelectionScreen');
+        }
+
+        function showSeasonEnd() {
+            const standings = Object.entries(gameState.teams)
+                .sort((a, b) => b[1].points - a[1].points)
+                .map((entry, index) => ({ ...entry[1], team: entry[0], position: index + 1 }));
+
+            const playerTeamStats = gameState.teams[gameState.playerTeam];
+            const playerPosition = standings.findIndex(t => t.team === gameState.playerTeam) + 1;
+
+            const stanningsTable = standings.map(team => `
+                <tr ${team.team === gameState.playerTeam ? 'style="background: #fffde7; font-weight: bold;"' : ''}>
+                    <td>${team.position}</td>
+                    <td>${team.team}${team.team === gameState.playerTeam ? ' ← YOU' : ''}</td>
+                    <td><strong>${team.points}</strong></td>
+                    <td>${team.wins}</td>
+                    <td>${team.draws}</td>
+                    <td>${team.losses}</td>
+                </tr>
+            `).join('');
+
+            const finalBudget = gameState.budget;
+            const initialBudget = TEAMS[gameState.playerTeam].budget;
+            const budgetChange = finalBudget - initialBudget;
+            const budgetColor = budgetChange >= 0 ? '#4caf50' : '#f44336';
+
+            const content = `
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #667eea; margin-bottom: 10px;">🏆 SEASON COMPLETE!</h1>
+                    <h2>${gameState.playerTeam}</h2>
+                    <div style="font-size: 1.3em; color: #999;">
+                        <strong>${playerTeamStats.wins}</strong> Wins |
+                        <strong>${playerTeamStats.draws}</strong> Draws |
+                        <strong>${playerTeamStats.losses}</strong> Losses
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, ${playerPosition <= 4 ? '#667eea' : '#999'} 0%, ${playerPosition <= 4 ? '#764ba2' : '#666'} 100%); color: white; padding: 25px; border-radius: 8px; margin-bottom: 30px; text-align: center;">
+                    <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 10px;">FINAL LEAGUE POSITION</div>
+                    <div style="font-size: 3em; font-weight: bold;">#${playerPosition}</div>
+                    <div style="margin-top: 10px; font-size: 1.2em;">${playerPosition <= 4 ? '✅ CHAMPIONS LEAGUE!' : playerPosition <= 6 ? '⚽ EUROPA LEAGUE' : '❌ No European Football'}</div>
+                </div>
+
+                <table class="standings" style="margin-bottom: 30px;">
+                    <thead>
+                        <tr>
+                            <th>Pos</th>
+                            <th>Team</th>
+                            <th>Pts</th>
+                            <th>W</th>
+                            <th>D</th>
+                            <th>L</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${stanningsTable}
+                    </tbody>
+                </table>
+
+                <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="margin-top: 0;">💰 Financial Summary</h3>
+                    <div style="margin-bottom: 10px;"><strong>Starting Budget:</strong> £${initialBudget.toFixed(2)}M</div>
+                    <div style="margin-bottom: 15px; color: ${budgetColor}; font-weight: bold; font-size: 1.2em;">
+                        Final Budget: £${finalBudget.toFixed(2)}M (${budgetChange >= 0 ? '+' : ''}£${budgetChange.toFixed(2)}M)
+                    </div>
+                    <div style="padding-top: 15px; border-top: 2px solid #ddd;">
+                        ${gameState.budget < 0 ? '<div style="color: #f44336; font-weight: bold;">⚠️ YOU RAN OUT OF MONEY! Time to sell players!</div>' : '<div style="color: #4caf50; font-weight: bold;">✅ Great financial management!</div>'}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('seasonEndContent').innerHTML = content;
+            showScreen('seasonEndScreen');
         }
 
         function showFinancesScreen() {
