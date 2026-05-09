@@ -1186,70 +1186,19 @@
                     <div id="goalDisplay" class="pitch-overlay-label">⚽ Match in progress...</div>
             `;
 
-            let animationCSS = '<style>';
-
-            if (totalGoals === 0) {
-                animationCSS += `
-                    @keyframes ballMovePossession {
-                        0%, 100% { transform: translateX(0); }
-                        50% { transform: translateX(0); }
-                    }
-                    @keyframes commentaryFade {
-                        0% { opacity: 0; }
-                        10% { opacity: 1; }
-                        90% { opacity: 1; }
-                        100% { opacity: 0; }
-                    }
-                    #animBall {
-                        animation: ballMovePossession 2s ease-in-out infinite;
-                    }
-                    #commentaryText {
-                        animation: commentaryFade 2s ease-in-out infinite;
-                        font-size: 52px;
-                    }
-                `;
-            } else {
-                let ballAnimations = [];
-
-                for (let i = 0; i < goalSequence.length; i++) {
-                    const isPlayerGoal = goalSequence[i] === 'player';
-                    const startX = 500;
-                    const startY = 300;
-                    const endX = isPlayerGoal ? 1020 : -20;
-
-                    const keyframeName = `ballMove${i}`;
-                    const moveDuration = 1.5;
-                    const goalMinute = goalTimes[i] || (i * 20 + 15); // Fallback timing if needed
-                    const goalTimeInSeconds = goalMinute * secondsPerMinute;
-                    const goalStartTime = Math.max(0, goalTimeInSeconds - 0.75);
-
-                    // Ball movement keyframes using transform
-                    const distance = endX - startX;
-                    animationCSS += `
-                        @keyframes ${keyframeName} {
-                            0% { transform: translateX(0); }
-                            100% { transform: translateX(${distance}px); }
-                        }
-                    `;
-
-                    ballAnimations.push(`${keyframeName} ${moveDuration}s linear ${goalStartTime}s`);
+            // Ball animation is now driven by JavaScript (see playMatch).
+            // Just keep the commentary fade keyframes here.
+            let animationCSS = `<style>
+                @keyframes commentaryFade {
+                    0% { opacity: 0; transform: scale(0.8); }
+                    20% { opacity: 1; transform: scale(1.1); }
+                    80% { opacity: 1; transform: scale(1); }
+                    100% { opacity: 0; transform: scale(0.8); }
                 }
-
-                // Ensure we always have a valid animation
-                let animationValue = ballAnimations.length > 0 ? ballAnimations.join(', ') : 'none';
-
-                animationCSS += `
-                    #animBall {
-                        animation: ${animationValue};
-                        animation-fill-mode: forwards;
-                    }
-                    #commentaryText {
-                        opacity: 0;
-                    }
-                `;
-            }
-
-            animationCSS += '</style>';
+                .goal-flash {
+                    animation: commentaryFade 1.2s ease-out forwards !important;
+                }
+            </style>`;
 
             return {
                 html: animationHTML + animationCSS,
@@ -1368,6 +1317,86 @@
 
             showScreen('matchResultScreen');
             content.innerHTML = '<div style="text-align:center; padding: 40px; color: #667eea; font-size: 1.2em;">⚽ Match in progress...</div>';
+
+            // JavaScript-driven ball animation
+            const animateBall = () => {
+                const ball = overlay.querySelector('#animBall');
+                if (!ball) return;
+
+                const goalEvents = (pitchAnimation.goalTimes || []).map((minute, i) => ({
+                    time: minute * pitchAnimation.secondsPerMinute * 1000,
+                    team: pitchAnimation.goalSequence[i]
+                }));
+
+                const animStartTime = Date.now();
+                let nextGoalIndex = 0;
+                let inGoalAnimation = false;
+                let goalAnimStart = 0;
+                let goalDirection = 0;
+                let resetting = false;
+                let resetStart = 0;
+
+                const frame = () => {
+                    if (!document.getElementById('pitchOverlay')) return; // Stop if overlay removed
+                    const elapsed = Date.now() - animStartTime;
+                    if (elapsed > 185000) return;
+
+                    // Trigger goal animation about 1 second before the goal time
+                    if (!inGoalAnimation && !resetting && nextGoalIndex < goalEvents.length
+                        && elapsed >= goalEvents[nextGoalIndex].time - 1000) {
+                        inGoalAnimation = true;
+                        goalAnimStart = elapsed;
+                        goalDirection = goalEvents[nextGoalIndex].team === 'player' ? 1 : -1;
+                    }
+
+                    if (inGoalAnimation) {
+                        // Animate ball moving toward goal over 1.5 seconds
+                        const goalProgress = Math.min(1, (elapsed - goalAnimStart) / 1500);
+                        const targetX = goalDirection > 0 ? 1020 : -20;
+                        const newX = 500 + (targetX - 500) * goalProgress;
+                        ball.setAttribute('cx', newX);
+
+                        // Trigger goal flash text
+                        if (goalProgress > 0.7) {
+                            const text = overlay.querySelector('#commentaryText');
+                            if (text && text.textContent !== '⚽ GOAL!') {
+                                text.textContent = '⚽ GOAL!';
+                                text.classList.remove('goal-flash');
+                                void text.offsetWidth; // Force reflow to restart animation
+                                text.classList.add('goal-flash');
+                            }
+                        }
+
+                        if (goalProgress >= 1) {
+                            inGoalAnimation = false;
+                            nextGoalIndex++;
+                            resetting = true;
+                            resetStart = elapsed;
+                        }
+                    } else if (resetting) {
+                        // Quick reset back to center over 0.5s
+                        const resetProgress = Math.min(1, (elapsed - resetStart) / 500);
+                        const currentX = parseFloat(ball.getAttribute('cx'));
+                        const newX = currentX + (500 - currentX) * 0.2; // Smooth interpolation
+                        ball.setAttribute('cx', newX);
+                        if (resetProgress >= 1) {
+                            resetting = false;
+                            ball.setAttribute('cx', 500);
+                        }
+                    } else {
+                        // Idle: gentle back-and-forth showing midfield possession
+                        const swingX = 500 + Math.sin(elapsed / 700) * 250;
+                        ball.setAttribute('cx', swingX);
+                        // Add slight vertical bob
+                        const bobY = 300 + Math.cos(elapsed / 500) * 40;
+                        ball.setAttribute('cy', bobY);
+                    }
+
+                    requestAnimationFrame(frame);
+                };
+                frame();
+            };
+            animateBall();
 
             // Update match clock every 0.1 seconds to show 0:00 to 90:00
             const updateMatchClock = () => {
