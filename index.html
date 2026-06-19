@@ -35,8 +35,8 @@
             min-height: 100vh;
             padding: 16px;
             image-rendering: pixelated;
-            line-height: 1.7;
-            font-size: 13px;
+            line-height: 1.6;
+            font-size: 9px;
         }
 
         .container {
@@ -73,7 +73,7 @@
         }
 
         .content {
-            padding: 24px 20px;
+            padding: 16px 14px;
         }
 
         .screen {
@@ -86,20 +86,20 @@
 
         .team-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 14px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            margin-bottom: 16px;
         }
 
         .team-btn {
-            padding: 14px;
+            padding: 8px;
             background: #1f1f3d;
-            border: 3px solid var(--border);
+            border: 2px solid var(--border);
             color: var(--ink);
             cursor: pointer;
             font-family: inherit;
-            font-size: 0.75em;
-            box-shadow: 4px 4px 0 #000;
+            font-size: 0.85em;
+            box-shadow: 3px 3px 0 #000;
             transition: none;
         }
 
@@ -113,20 +113,20 @@
 
         .opponent-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 6px;
+            margin-top: 16px;
         }
 
         .opponent-btn {
-            padding: 10px;
+            padding: 6px;
             background: #1f1f3d;
-            border: 3px solid var(--border);
+            border: 2px solid var(--border);
             color: var(--ink);
             cursor: pointer;
             font-family: inherit;
-            font-size: 0.65em;
-            box-shadow: 3px 3px 0 #000;
+            font-size: 0.8em;
+            box-shadow: 2px 2px 0 #000;
             transition: none;
         }
 
@@ -139,19 +139,19 @@
         .menu {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
-            margin-top: 20px;
+            gap: 8px;
+            margin-top: 16px;
         }
 
         button.menu-btn {
-            padding: 16px;
+            padding: 10px;
             background: var(--border);
             color: #fff;
-            border: 3px solid #000;
+            border: 2px solid #000;
             font-family: inherit;
-            font-size: 0.72em;
+            font-size: 0.85em;
             cursor: pointer;
-            box-shadow: 4px 4px 0 #000;
+            box-shadow: 3px 3px 0 #000;
             transition: none;
             text-shadow: 2px 2px 0 #000;
         }
@@ -169,17 +169,17 @@
 
         .match-result {
             background: #1f1f3d;
-            padding: 20px;
-            border: 4px solid var(--border);
-            border-left-width: 10px;
-            margin: 20px 0;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-left-width: 6px;
+            margin: 14px 0;
             text-align: center;
-            box-shadow: 5px 5px 0 #000;
+            box-shadow: 3px 3px 0 #000;
         }
 
         .match-result h2 {
-            font-size: 1.1em;
-            margin: 14px 0;
+            font-size: 1em;
+            margin: 8px 0;
             color: var(--ink);
             text-shadow: 2px 2px 0 #000;
         }
@@ -214,9 +214,9 @@
         .standings {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 0.7em;
-            border: 3px solid #000;
+            margin-top: 16px;
+            font-size: 0.8em;
+            border: 2px solid #000;
         }
 
         .standings thead {
@@ -225,9 +225,9 @@
         }
 
         .standings th, .standings td {
-            padding: 10px;
+            padding: 5px;
             text-align: left;
-            border: 2px solid #000;
+            border: 1px solid #000;
         }
 
         .standings tbody tr {
@@ -247,29 +247,29 @@
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
-            margin-top: 20px;
+            gap: 8px;
+            margin-top: 16px;
         }
 
         .stat-card {
             background: #1f1f3d;
-            padding: 16px;
-            border: 3px solid var(--cyan);
+            padding: 10px;
+            border: 2px solid var(--cyan);
             text-align: center;
-            box-shadow: 4px 4px 0 #000;
+            box-shadow: 3px 3px 0 #000;
         }
 
         .stat-card .value {
-            font-size: 1.4em;
+            font-size: 1.3em;
             font-weight: bold;
             color: var(--cyan);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             text-shadow: 2px 2px 0 #000;
         }
 
         .stat-card .label {
             color: var(--ink);
-            font-size: 0.7em;
+            font-size: 0.85em;
         }
 
         .back-btn {
@@ -297,31 +297,31 @@
 
         .players-list {
             background: #1f1f3d;
-            padding: 20px;
-            border: 3px solid var(--border);
-            margin: 20px 0;
-            box-shadow: 4px 4px 0 #000;
+            padding: 12px;
+            border: 2px solid var(--border);
+            margin: 14px 0;
+            box-shadow: 3px 3px 0 #000;
         }
 
         .players-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 12px;
-            margin-top: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+            gap: 7px;
+            margin-top: 10px;
         }
 
         .player-card {
             background: #14142b;
-            padding: 12px;
-            border: 3px solid var(--cyan);
+            padding: 7px;
+            border: 2px solid var(--cyan);
             text-align: center;
-            font-size: 0.7em;
-            box-shadow: 3px 3px 0 #000;
+            font-size: 0.8em;
+            box-shadow: 2px 2px 0 #000;
         }
 
         .player-name {
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             color: var(--ink);
         }
 
@@ -339,12 +339,12 @@
         .team-strength {
             background: var(--green-dark);
             color: var(--yellow);
-            padding: 16px;
-            border: 3px solid var(--green);
-            margin: 20px 0;
+            padding: 10px;
+            border: 2px solid var(--green);
+            margin: 14px 0;
             text-align: center;
-            font-size: 0.85em;
-            box-shadow: 4px 4px 0 #000;
+            font-size: 0.95em;
+            box-shadow: 3px 3px 0 #000;
             text-shadow: 2px 2px 0 #000;
         }
 
