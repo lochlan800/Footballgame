@@ -1244,10 +1244,6 @@
                         <circle cx="70" cy="530" r="20" fill="none" stroke="white" stroke-width="2"/>
                         <circle cx="930" cy="530" r="20" fill="none" stroke="white" stroke-width="2"/>
 
-                        <!-- Retro yellow zig-zag channel markings down the middle -->
-                        <polyline points="416,170 444,196 416,222 444,248 416,274 444,300 416,326 444,352 416,378 444,404 416,430" fill="none" stroke="#ffdc00" stroke-width="6" stroke-linejoin="miter" stroke-linecap="square"/>
-                        <polyline points="556,170 584,196 556,222 584,248 556,274 584,300 556,326 584,352 556,378 584,404 556,430" fill="none" stroke="#ffdc00" stroke-width="6" stroke-linejoin="miter" stroke-linecap="square"/>
-
                         <!-- Ball: classic black & white football -->
                         <defs>
                             <clipPath id="ballClip">
@@ -1255,6 +1251,9 @@
                             </clipPath>
                         </defs>
                         <g id="animBall" transform="translate(500 300)">
+                            <!-- light blue translucent panels on each side of the ball -->
+                            <rect x="-86" y="-48" width="28" height="96" fill="#66ccff" opacity="0.35"/>
+                            <rect x="58" y="-48" width="28" height="96" fill="#66ccff" opacity="0.35"/>
                             <circle cx="0" cy="0" r="50" fill="white" stroke="#222" stroke-width="4"/>
                             <g clip-path="url(#ballClip)">
                                 <!-- seams from the central pentagon out to the rim -->
