@@ -1244,9 +1244,31 @@
                         <circle cx="70" cy="530" r="20" fill="none" stroke="white" stroke-width="2"/>
                         <circle cx="930" cy="530" r="20" fill="none" stroke="white" stroke-width="2"/>
 
-                        <!-- Ball with retro yellow zig-zag side trim -->
+                        <!-- Ball: classic black & white football with retro yellow zig-zag trim -->
+                        <defs>
+                            <clipPath id="ballClip">
+                                <circle cx="0" cy="0" r="50"/>
+                            </clipPath>
+                        </defs>
                         <g id="animBall" transform="translate(500 300)">
-                            <circle cx="0" cy="0" r="50" fill="white" stroke="#333" stroke-width="4"/>
+                            <circle cx="0" cy="0" r="50" fill="white" stroke="#222" stroke-width="4"/>
+                            <g clip-path="url(#ballClip)">
+                                <!-- seams from the central pentagon out to the rim -->
+                                <g stroke="#222" stroke-width="3" fill="none">
+                                    <line x1="0" y1="-17" x2="0" y2="-50"/>
+                                    <line x1="16.2" y1="-5.3" x2="47.6" y2="-15.5"/>
+                                    <line x1="10" y1="13.8" x2="29.4" y2="40.5"/>
+                                    <line x1="-10" y1="13.8" x2="-29.4" y2="40.5"/>
+                                    <line x1="-16.2" y1="-5.3" x2="-47.6" y2="-15.5"/>
+                                </g>
+                                <!-- black panels: central pentagon + 5 around the edge -->
+                                <polygon points="0.0,-17.0 16.2,-5.3 10.0,13.8 -10.0,13.8 -16.2,-5.3" fill="#1a1a1a"/>
+                                <polygon points="15.9,-21.8 11.1,-36.4 23.5,-45.4 35.9,-36.4 31.2,-21.8" fill="#1a1a1a"/>
+                                <polygon points="25.7,8.3 38.0,-0.6 50.4,8.3 45.7,22.9 30.4,22.9" fill="#1a1a1a"/>
+                                <polygon points="0.0,27.0 12.4,36.0 7.6,50.5 -7.6,50.5 -12.4,36.0" fill="#1a1a1a"/>
+                                <polygon points="-25.7,8.3 -30.4,22.9 -45.7,22.9 -50.4,8.3 -38.0,-0.6" fill="#1a1a1a"/>
+                                <polygon points="-15.9,-21.8 -31.2,-21.8 -35.9,-36.4 -23.5,-45.4 -11.1,-36.4" fill="#1a1a1a"/>
+                            </g>
                             <polyline points="-50,-50 -66,-37 -50,-25 -66,-12 -50,0 -66,12 -50,25 -66,37 -50,50" fill="none" stroke="#ffdc00" stroke-width="7" stroke-linejoin="miter" stroke-linecap="square"/>
                             <polyline points="50,-50 66,-37 50,-25 66,-12 50,0 66,12 50,25 66,37 50,50" fill="none" stroke="#ffdc00" stroke-width="7" stroke-linejoin="miter" stroke-linecap="square"/>
                         </g>
