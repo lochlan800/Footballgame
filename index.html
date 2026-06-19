@@ -1073,9 +1073,9 @@
         function generatePitchAnimation(playerScore, opponentScore, playerTeam, opponent) {
             const goalSequence = createGoalSequence(playerScore, opponentScore);
             const totalGoals = playerScore + opponentScore;
-            // 90 minutes × 2 seconds per minute = 180 seconds total
-            const animationDuration = 180;
-            const secondsPerMinute = 2;
+            // Match lasts 70 real seconds but the clock still counts up to 90 minutes
+            const animationDuration = 70;
+            const secondsPerMinute = 70 / 90;
 
             // Distribute goals throughout the match
             const goalTimes = [];
@@ -1407,7 +1407,7 @@
                 const frame = () => {
                     if (!document.getElementById('pitchOverlay')) return;
                     const elapsed = Date.now() - animStartTime;
-                    if (elapsed > 185000) return;
+                    if (elapsed > 72000) return;
 
                     // Trigger goal animation about 1 second before the goal time
                     if (!inGoalAnimation && !resetting && nextGoalIndex < goalEvents.length
@@ -1514,12 +1514,15 @@
                 const startTime = Date.now();
                 const clockInterval = setInterval(() => {
                     const elapsed = (Date.now() - startTime) / 1000;
-                    if (elapsed >= 180) {
+                    if (elapsed >= 70) {
                         clearInterval(clockInterval);
+                        const clock = document.getElementById('matchClock');
+                        if (clock) clock.textContent = '90:00';
                         return;
                     }
-                    const minute = Math.floor(elapsed / 2);
-                    const seconds = Math.floor((elapsed % 2) * 30); // 2 real seconds = 60 match seconds
+                    const secsPerMin = 70 / 90; // 70 real seconds == 90 match minutes
+                    const minute = Math.floor(elapsed / secsPerMin);
+                    const seconds = Math.floor(((elapsed % secsPerMin) / secsPerMin) * 60);
                     const clock = document.getElementById('matchClock');
                     if (clock) {
                         clock.textContent = `${minute}:${seconds < 10 ? '0' : ''}${seconds}`;
