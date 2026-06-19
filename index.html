@@ -1475,22 +1475,10 @@
                             lastCommentaryUpdate = elapsed; // Wait a moment before next commentary
                         }
                     } else {
-                        // Idle: ball moves directionally across the pitch
-                        // Linear progression: moves from left (100) to right (900) over 50s, then right to left, etc.
-                        const cycleLength = 50000; // 50 seconds per direction
-                        const position = elapsed % (cycleLength * 2);
-                        let swingX;
-                        if (position < cycleLength) {
-                            // Moving right (left to right goal)
-                            swingX = 100 + (position / cycleLength) * 800;
-                        } else {
-                            // Moving left (right to left goal)
-                            swingX = 900 - ((position - cycleLength) / cycleLength) * 800;
-                        }
+                        // Idle: ball stays on the middle line and moves side to side horizontally
+                        const swingX = 500 + Math.sin(elapsed / 1200) * 350;
                         ball.setAttribute('cx', swingX);
-                        // Slight vertical bobbing
-                        const bobY = 300 + Math.sin(elapsed / 300) * 30;
-                        ball.setAttribute('cy', bobY);
+                        ball.setAttribute('cy', 300);
 
                         // Update idle commentary every 2.5 seconds based on ball position
                         if (elapsed - lastCommentaryUpdate > 2500) {
