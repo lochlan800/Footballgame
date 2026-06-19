@@ -1244,8 +1244,12 @@
                         <circle cx="70" cy="530" r="20" fill="none" stroke="white" stroke-width="2"/>
                         <circle cx="930" cy="530" r="20" fill="none" stroke="white" stroke-width="2"/>
 
-                        <!-- Ball -->
-                        <circle id="animBall" cx="500" cy="300" r="50" fill="white" stroke="#333" stroke-width="4"/>
+                        <!-- Ball with retro yellow zig-zag side trim -->
+                        <g id="animBall" transform="translate(500 300)">
+                            <circle cx="0" cy="0" r="50" fill="white" stroke="#333" stroke-width="4"/>
+                            <polyline points="-50,-50 -66,-37 -50,-25 -66,-12 -50,0 -66,12 -50,25 -66,37 -50,50" fill="none" stroke="#ffdc00" stroke-width="7" stroke-linejoin="miter" stroke-linecap="square"/>
+                            <polyline points="50,-50 66,-37 50,-25 66,-12 50,0 66,12 50,25 66,37 50,50" fill="none" stroke="#ffdc00" stroke-width="7" stroke-linejoin="miter" stroke-linecap="square"/>
+                        </g>
 
                         <!-- Match clock -->
                         <rect x="350" y="20" width="300" height="64" fill="#000" stroke="#2ecc40" stroke-width="4"/>
@@ -1404,6 +1408,24 @@
                 const log = overlay.querySelector('#commentaryLog');
                 if (!ball) return;
 
+                // Chunky ball movement: snap the position to a coarse grid and only
+                // move it a few times a second so it steps across the pitch like an
+                // old-school game instead of gliding smoothly.
+                const CHUNK = 28;      // grid size in SVG units
+                const STEP_MS = 90;    // how often the ball is allowed to move
+                let currentBallX = 500;
+                let currentBallY = 300;
+                let lastBallStep = -9999;
+                const setBall = (x, y, elapsed) => {
+                    currentBallX = x;
+                    currentBallY = y;
+                    if (elapsed - lastBallStep < STEP_MS) return;
+                    lastBallStep = elapsed;
+                    const sx = Math.round(x / CHUNK) * CHUNK;
+                    const sy = Math.round(y / CHUNK) * CHUNK;
+                    ball.setAttribute('transform', `translate(${sx} ${sy})`);
+                };
+
                 const playerTeamName = gameState.playerTeam;
                 const opponentName = opponent;
 
@@ -1507,8 +1529,7 @@
                         const goalProgress = Math.min(1, (elapsed - goalAnimStart) / 1500);
                         const targetX = goalDirection > 0 ? 1020 : -20;
                         const newX = 500 + (targetX - 500) * goalProgress;
-                        ball.setAttribute('cx', newX);
-                        ball.setAttribute('cy', 300);
+                        setBall(newX, 300, elapsed);
 
                         // Phase 2: shot
                         if (goalProgress > 0.4 && !shotPhraseShown) {
@@ -1538,10 +1559,8 @@
                         }
                     } else if (resetting) {
                         const resetProgress = Math.min(1, (elapsed - resetStart) / 800);
-                        const currentX = parseFloat(ball.getAttribute('cx'));
-                        const newX = currentX + (500 - currentX) * 0.15;
-                        ball.setAttribute('cx', newX);
-                        ball.setAttribute('cy', 300);
+                        const newX = currentBallX + (500 - currentBallX) * 0.15;
+                        setBall(newX, 300, elapsed);
 
                         // Show kickoff commentary briefly after a goal
                         if (!kickoffShown && resetProgress > 0.3) {
@@ -1551,14 +1570,15 @@
 
                         if (resetProgress >= 1) {
                             resetting = false;
-                            ball.setAttribute('cx', 500);
+                            currentBallX = 500;
+                            currentBallY = 300;
+                            ball.setAttribute('transform', 'translate(500 300)');
                             lastCommentaryUpdate = elapsed; // Wait a moment before next commentary
                         }
                     } else {
                         // Idle: ball stays on the middle line and moves side to side horizontally
                         const swingX = 500 + Math.sin(elapsed / 1200) * 350;
-                        ball.setAttribute('cx', swingX);
-                        ball.setAttribute('cy', 300);
+                        setBall(swingX, 300, elapsed);
 
                         // Update idle commentary every 2.5 seconds based on ball position
                         if (elapsed - lastCommentaryUpdate > 2500) {
